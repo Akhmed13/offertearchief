@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prijzen</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f5f7;--panel:#fff;--ink:#1c2530;--mute:#66727f;--line:#d9dee3;--acc:#0f5c8c;--accink:#fff;--good:#1b7a3d;--goodbg:#e2f3e8;--side:#1c2530;--sideink:#e8edf2;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12171d;--panel:#1b222a;--ink:#e8edf2;--mute:#93a0ad;--line:#2d3742;--acc:#5ab0e6;--accink:#0b1a26;--good:#6fd394;--goodbg:#173626;--side:#0c1014;--sideink:#e8edf2}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 Barlow,system-ui,sans-serif}
+.app{display:grid;grid-template-columns:300px 1fr;min-height:100vh}
+aside{background:linear-gradient(180deg,var(--side),color-mix(in srgb,var(--side) 82%,#000));color:var(--sideink);padding:22px 14px 16px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+.ver{margin-top:auto;padding:18px 6px 0;font-size:12px;opacity:.6}
+.brand{display:flex;align-items:center;gap:11px;margin:0 4px 22px}
+.logo{flex:none;width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--acc);color:var(--accink);box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.logo svg{width:21px;height:21px}
+aside h1{font:700 21px/1.1 'Barlow Condensed',Arial Narrow,sans-serif;margin:0;letter-spacing:.2px;overflow-wrap:break-word}
+.navlbl{font-size:11px;font-weight:600;letter-spacing:.9px;text-transform:uppercase;opacity:.5;margin:0 12px 8px}
+.cats{display:flex;flex-direction:column;gap:2px}
+.cat{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;background:none;border:0;color:inherit;font:inherit;text-align:left;padding:9px 10px 9px 12px;border-radius:8px;cursor:pointer;transition:background .12s}
+.cat:hover{background:rgba(255,255,255,.08)}
+.cat.on{background:var(--acc);color:var(--accink);font-weight:600;box-shadow:0 3px 10px rgba(0,0,0,.25)}
+.cat span:last-child{flex:none;min-width:26px;text-align:center;font-size:12px;font-weight:600;padding:1px 8px;border-radius:999px;background:rgba(255,255,255,.1);opacity:.9}
+.cat.on span:last-child{background:rgba(255,255,255,.25)}
+.cat svg{width:16px;height:16px;margin-right:9px;vertical-align:-3px;opacity:.85}
+.cat.sub{margin-left:18px;width:calc(100% - 18px);padding-left:14px;border-radius:0 8px 8px 0;border-left:2px solid rgba(255,255,255,.14);font-size:14px}
+.cat.sub.on{border-left-color:#fff}
+.delcat{margin-top:10px;width:100%;background:none;border:1px solid #ff8a80;color:#ff8a80;border-radius:4px;padding:7px;font:inherit;cursor:pointer}
+.delcat:hover{background:rgba(255,138,128,.12)}
+.store{margin-top:20px;padding:12px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:13px}
+#storeMsg::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#6fd394;margin-right:8px}
+.sbtn{width:100%;margin-top:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.3);color:inherit;border-radius:4px;padding:7px;font:inherit;cursor:pointer}
+.sbtn:hover{background:rgba(255,255,255,.18)}
+.addcat{display:flex;gap:6px;margin:14px 0 0}
+.addcat input{flex:1;min-width:0;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:inherit;border-radius:8px;padding:8px 10px;font:inherit}
+.addcat input::placeholder{color:inherit;opacity:.5}
+.addcat button{flex:none;width:38px;padding:0;font-size:20px;line-height:1;border-radius:8px}
+main{padding:22px 26px;min-width:0}
+.top{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.top h2{font:700 32px/1 'Barlow Condensed',Arial Narrow,sans-serif;margin:0 auto 0 0}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:8px 10px;width:100%}
+.top input{width:220px}
+button.p,button.s{font:inherit;font-weight:600;border-radius:4px;padding:8px 14px;cursor:pointer;border:1px solid var(--acc)}
+button.p{background:var(--acc);color:var(--accink)}
+button.s{background:none;color:var(--acc)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.wrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:6px}
+table{border-collapse:collapse;width:100%;min-width:760px}
+th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--mute);font-size:13px}
+th.sort{cursor:pointer;user-select:none;white-space:nowrap}
+th.sort:hover,th.sort.on{color:var(--acc)}
+tr:last-child td{border-bottom:0}
+td.amt{font-weight:600;white-space:nowrap}
+.low{background:var(--goodbg);color:var(--good);border-radius:3px;padding:2px 6px;font-size:12px;margin-left:6px;font-weight:600}
+.note{color:var(--mute);font-size:13px}
+.tag{font:inherit;font-size:12px;background:var(--bg);color:var(--acc);border:1px solid var(--line);border-radius:10px;padding:1px 8px;margin:4px 4px 0 0;cursor:pointer}
+.tag:hover{border-color:var(--acc)}
+.ov{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.ovc{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--c);border-radius:8px;padding:16px;transition:box-shadow .15s,transform .15s,border-color .15s}
+.ovc:hover{box-shadow:0 8px 20px rgba(0,0,0,.12);transform:translateY(-2px);border-color:var(--c)}
+.ovh{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;color:var(--ink);font:inherit;cursor:pointer;padding:0;text-align:left}
+.ovi{flex:none;width:44px;height:44px;border-radius:10px;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 15%,transparent);color:var(--c);font:700 24px/1 'Barlow Condensed',Arial Narrow,sans-serif}
+.ovt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ovt strong{font:700 22px/1.1 'Barlow Condensed',Arial Narrow,sans-serif;overflow-wrap:break-word;hyphens:auto}
+.ovt small{color:var(--mute);font-size:13px}
+.ovn{flex:none;font:700 32px/1 'Barlow Condensed',Arial Narrow,sans-serif;color:var(--c)}
+.ovn.z{color:var(--mute);opacity:.6}
+.ovs{display:flex;flex-wrap:wrap;gap:4px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.ovs .tag{margin:0;font-size:13px;padding:2px 10px}
+.ovs .tag:hover{background:color-mix(in srgb,var(--c) 12%,transparent);border-color:var(--c)}
+.igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:8px;max-height:58vh;overflow-y:auto;padding:2px}
+#ico{width:min(680px,94vw)}
+.ib{display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 4px 9px;background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--ink);font:inherit;font-size:12px;cursor:pointer}
+.ib svg{width:26px;height:26px}
+.ib:hover{border-color:var(--acc);color:var(--acc)}
+.ib.sel{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--acc)}
+.cat[draggable=true]{cursor:grab}
+.cat.dragging{opacity:.4}
+.cat.drop-before{box-shadow:0 -2px 0 #6cb8ee}
+.cat.drop-after{box-shadow:0 2px 0 #6cb8ee}
+.cat .ci{color:var(--c)}
+.cat.on .ci{color:inherit}
+.ovi svg{width:24px;height:24px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c);margin-right:9px;vertical-align:1px}
+.ctx{position:fixed;z-index:50;min-width:190px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:4px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.ctx button{display:block;width:100%;text-align:left;background:none;border:0;color:inherit;font:inherit;padding:8px 10px;border-radius:4px;cursor:pointer}
+.ctx button:hover{background:var(--bg)}
+.ctx button[data-a=del]{color:#b3261e}
+.empty{padding:44px 20px;text-align:center;color:var(--mute)}
+.act button{margin-right:6px}
+.act .del{color:#b3261e;border-color:#b3261e}
+dialog{border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);padding:22px;width:min(520px,94vw)}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+dialog.big{width:min(960px,96vw);height:90vh;flex-direction:column}
+dialog.big[open]{display:flex}
+dialog.big iframe{flex:1;border:1px solid var(--line);border-radius:4px;width:100%;background:#fff;margin-top:10px}
+label{display:block;font-size:13px;color:var(--mute);margin:12px 0 4px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btns{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
+.msg{color:#b3261e;font-size:13px;margin-top:8px;min-height:18px}
+@media(max-width:760px){.app{grid-template-columns:1fr}aside{padding:14px;position:static;height:auto}.ver{padding-top:12px}.cats{display:flex;flex-wrap:wrap;gap:4px}.cat{width:auto;gap:8px}main{padding:16px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></span><h1 id="appTitle" title="Dubbelklik of klik met de rechtermuisknop om de titel te wijzigen" style="cursor:pointer">Offertearchief</h1></div>
+    <div class="navlbl">Categorieën</div>
+    <div class="cats" id="cats"></div>
+    <form class="addcat" id="catForm"><input id="newCat" placeholder="Nieuwe categorie" aria-label="Nieuwe categorie"><button class="p" type="submit" aria-label="Categorie toevoegen" title="Categorie toevoegen">+</button></form>
+    
+    
+    
+    <div class="store"><div id="storeMsg">Opslag in deze browser</div><button class="sbtn" id="pickDir">Kies opslagmap</button><button class="sbtn" id="useBrowser" hidden>Gebruik browseropslag</button></div>
+  <div class="ver">Versie 1.0</div>
+  </aside>
+  <main>
+    <div class="top">
+      <h2 id="title">Alle offertes</h2>
+      <input id="q" type="search" placeholder="Zoek in alle offertes en trefwoorden" aria-label="Zoeken">
+      <button class="p" id="addBtn">Offerte toevoegen</button>
+    </div>
+    <div class="ov" id="overview" hidden></div>
+    <div class="wrap" id="wrap"><table>
+      <thead><tr><th>Leverancier</th><th>Project</th><th class="sort" id="thAmt" tabindex="0" role="button" title="Sorteer op bedrag">Bedrag</th><th class="sort" id="thDate" tabindex="0" role="button" title="Sorteer op ontvangstdatum">Ontvangen</th><th>PDF</th><th></th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table><div class="empty" id="empty" hidden>Hier staan nog geen offertes. Voeg de eerste pdf toe met “Offerte toevoegen”.</div></div>
+    <p class="note">Bestanden worden opgeslagen waar de zijbalk aangeeft (een map naar keuze, of deze browser). Bewaar de originele e-mails als back-up.</p>
+  </main>
+</div>
+
+<dialog id="dlg">
+  <form id="form">
+    <h2 style="margin:0;font:700 26px 'Barlow Condensed',sans-serif" id="dlgTitle">Offerte toevoegen</h2>
+    <div class="row"><div><label>Categorie</label><select id="fCat"></select></div>
+    <div><label>Subcategorie</label><select id="fSub"></select></div></div>
+    <div class="row"><div><label>Leverancier / onderaannemer</label><input id="fSup" required></div>
+    <div><label>Project</label><input id="fPro"></div></div>
+    <div class="row"><div><label>Bedrag (excl. btw)</label><input id="fAmt" type="number" step="0.01" min="0"></div>
+    <div><label>Datum ontvangen</label><input id="fDate" type="date"></div></div>
+    <label>Notities</label><textarea id="fNote" rows="2"></textarea>
+    <label>Trefwoorden (gescheiden door komma's)</label><input id="fTags" placeholder="bv. zink, 25 jaar garantie, steiger inbegrepen">
+    <label id="fileLbl">Pdf-bestand</label><input id="fFile" type="file" accept="application/pdf,.pdf">
+    <div class="msg" id="msg" role="alert"></div>
+    <div class="btns"><button type="button" class="s" id="cancel">Annuleren</button><button class="p" type="submit">Offerte opslaan</button></div>
+  </form>
+</dialog>
+
+<div class="ctx" id="ctx" hidden><button type="button" data-a="sub">Subcategorie toevoegen</button><button type="button" data-a="ico">Pictogram wijzigen</button><button type="button" data-a="ren">Hernoemen</button><button type="button" data-a="del">Verwijderen</button></div>
+
+<dialog id="ico"><h3 id="iTitle" style="margin:0 0 14px;font:700 24px 'Barlow Condensed',sans-serif">Kies een pictogram</h3><div class="igrid" id="iGrid"></div><div class="btns"><button type="button" class="s" id="iNo">Annuleren</button></div></dialog>
+
+<dialog id="ren"><h3 id="rTitle" style="margin:0 0 10px;font:700 24px 'Barlow Condensed',sans-serif">Hernoemen</h3><input id="rIn" aria-label="Nieuwe naam"><div class="msg" id="rMsg" role="alert"></div><div class="btns"><button type="button" class="s" id="rNo">Annuleren</button><button type="button" class="p" id="rOk">Hernoemen</button></div></dialog>
+
+<dialog id="cfm"><p id="cMsg" style="margin:0 0 4px;font-size:16px"></p><div class="btns"><button type="button" class="s" id="cNo">Annuleren</button><button type="button" class="p" id="cOk">OK</button></div></dialog>
+
+<dialog id="view" class="big">
+  <div style="display:flex;justify-content:space-between;align-items:center"><strong id="vName"></strong><span style="display:flex;gap:8px"><button type="button" class="p" id="vDown">Downloaden</button><button class="s" id="vClose">Sluiten</button></span></div>
+  <iframe id="vFrame" title="Voorbeeld van de pdf"></iframe>
+</dialog>
+
+<script>
+const DEFAULT_CATS=["Dak","Buitenschrijnwerk","Gevel","Isolatie","Overige"];
+let sortKey="",sortDir=1,dlRec=null,dlBlob=null;
+function setSort(k){if(sortKey===k)sortDir=-sortDir;else{sortKey=k;sortDir=1}render()}
+[["thAmt","amount"],["thDate","date"]].forEach(([id,k])=>{const h=document.getElementById(id);h.onclick=()=>setSort(k);h.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setSort(k)}}});
+let cats=[],quotes=[],cur="All",curSub="",openCats=new Set(),dir=null,pending=null,db,editing=null,objUrl=null;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const money=n=>n===""||n==null?"–":new Intl.NumberFormat("nl-BE",{style:"currency",currency:"EUR"}).format(n);
+
+function loadCats(){let v=null;try{v=JSON.parse(localStorage.getItem("qa-cats"))}catch(e){}
+  if(!Array.isArray(v)||!v.length)v=DEFAULT_CATS.slice();
+  return v.map(c=>typeof c==="string"?{name:c,subs:[],icon:""}:{name:c.name,subs:c.subs||[],icon:c.icon||"",hue:c.hue})}
+function catObj(n){return cats.find(c=>c.name===n)}
+function saveCats(){if(dir){saveIndex().catch(()=>{});return}try{localStorage.setItem("qa-cats",JSON.stringify(cats))}catch(e){}}
+
+const san=s=>(s||"").replace(/[\\/:*?"<>|]/g,"_").trim()||"Other";
+function metaOp(mode,fn){return new Promise(res=>{try{const r=fn(db.transaction("meta",mode).objectStore("meta"));r.onsuccess=()=>res(r.result);r.onerror=()=>res(null)}catch(e){res(null)}})}
+async function writePdf(rec,blob){
+  const parts=[rec.category,rec.subcategory].filter(Boolean).map(san);let d=dir;
+  for(const p of parts)d=await d.getDirectoryHandle(p,{create:true});
+  const base=san(rec.fileName).replace(/\.pdf$/i,"");let name=base+".pdf",n=1;
+  while(await d.getFileHandle(name).then(()=>true,()=>false)){n++;name=base+"-"+n+".pdf"}
+  const w=await(await d.getFileHandle(name,{create:true})).createWritable();await w.write(blob);await w.close();
+  return [...parts,name].join("/");
+}
+async function readPdf(path,root){let d=root||dir;const p=path.split("/");for(const s of p.slice(0,-1))d=await d.getDirectoryHandle(s);return (await d.getFileHandle(p[p.length-1])).getFile()}
+async function removePdf(path){let d=dir;const p=path.split("/");for(const s of p.slice(0,-1))d=await d.getDirectoryHandle(s);await d.removeEntry(p[p.length-1])}
+async function saveIndex(){const w=await(await dir.getFileHandle("quotation-index.json",{create:true})).createWritable();
+  await w.write(JSON.stringify({title:appName,cats,quotes:quotes.map(({blob,...r})=>r)},null,1));await w.close()}
+async function useDir(h){
+  const oldDir=dir,oldQuotes=quotes,oldCats=cats;dir=h;let idx=null;
+  try{idx=JSON.parse(await(await(await h.getFileHandle("quotation-index.json")).getFile()).text())}catch(e){}
+  if(idx&&idx.title)applyTitle(idx.title);
+  if(idx&&Array.isArray(idx.quotes)){cats=(idx.cats||[]).map(c=>typeof c==="string"?{name:c,subs:[]}:c);quotes=idx.quotes}
+  else{
+    const copy=oldQuotes.length&&await ask("Deze map bevat nog geen archief. De "+oldQuotes.length+" opgeslagen offerte(s) naar deze map kopiëren?","Kopiëren");
+    quotes=[];cats=oldCats;
+    if(copy)for(const q of oldQuotes){const n={...q};const b=q.blob||(q.path&&oldDir?await readPdf(q.path,oldDir).catch(()=>null):null);delete n.blob;delete n.path;if(b)n.path=await writePdf(n,b);quotes.push(n)}
+    await saveIndex();
+  }
+  cur="All";curSub="";await metaOp("readwrite",s=>s.put(h,"dir"));updateStore();render();
+}
+function updateStore(){
+  $("storeMsg").textContent=dir?"Opslag in map: "+dir.name:(pending?"Map “"+pending.name+"” heeft je toestemming nodig":"Opslag in deze browser");
+  $("pickDir").textContent=pending&&!dir?"Map opnieuw verbinden":(dir?"Map wijzigen":"Kies opslagmap");
+  $("useBrowser").hidden=!dir;
+}
+
+function openDB(){return new Promise(res=>{try{const r=indexedDB.open("quotation-archive",2);
+ r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains("quotes"))d.createObjectStore("quotes",{keyPath:"id"});if(!d.objectStoreNames.contains("meta"))d.createObjectStore("meta")};
+ r.onsuccess=()=>res(r.result);r.onerror=()=>res(null)}catch(e){res(null)}})}
+function tx(mode){return db.transaction("quotes",mode).objectStore("quotes")}
+function getAll(){return new Promise(res=>{if(!db)return res([]);const r=tx("readonly").getAll();r.onsuccess=()=>res(r.result);r.onerror=()=>res([])})}
+function put(rec){return new Promise((res,rej)=>{const r=tx("readwrite").put(rec);r.onsuccess=()=>res();r.onerror=()=>rej(r.error)})}
+function del(id){return new Promise(res=>{const r=tx("readwrite").delete(id);r.onsuccess=r.onerror=()=>res()})}
+
+const ICONS={
+folder:["Map",'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>'],
+roof:["Dak",'<path d="M2 10 12 3l10 7"/><path d="M4 15 12 9l8 6"/><path d="M6 20l6-5 6 5"/>'],
+window:["Raam",'<rect x="4" y="3" width="16" height="18" rx="1"/><path d="M12 3v18M4 12h16"/>'],
+door:["Deur",'<rect x="6" y="3" width="12" height="18" rx="1"/><circle cx="15" cy="12" r=".9" fill="currentColor"/>'],
+facade:["Gevel",'<rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 9.3h18M3 14.7h18M9 4v5.3M15 9.3v5.4M9 14.7V20"/>'],
+building:["Gebouw",'<rect x="5" y="3" width="14" height="18" rx="1"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2"/>'],
+layers:["Isolatie",'<path d="M12 2 2 7l10 5 10-5z"/><path d="m2 12 10 5 10-5"/><path d="m2 17 10 5 10-5"/>'],
+water:["Water",'<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>'],
+bolt:["Elektrisch",'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>'],
+floor:["Vloer",'<rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 9.3h18M3 14.7h18M8 4v5.3M15 9.3v5.4M8 14.7V20"/>'],
+paint:["Verf",'<rect x="4" y="3" width="14" height="6" rx="1"/><path d="M18 6h2v5h-8v3"/><rect x="10" y="14" width="4" height="7" rx="1"/>'],
+wrench:["Gereedschap",'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'],
+truck:["Transport",'<path d="M2 6h11v10H2z"/><path d="M13 9h5l3 3v4h-8"/><circle cx="6.5" cy="17.5" r="2"/><circle cx="17.5" cy="17.5" r="2"/>'],
+ladder:["Steiger",'<path d="M7 3v18M17 3v18M7 7h10M7 12h10M7 17h10"/>'],
+euro:["Prijs",'<path d="M18 7a6 6 0 1 0 0 10"/><path d="M4 10h9M4 14h9"/>'],
+star:["Favoriet",'<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>'],
+doc:["Document",'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>'],
+sun:["Zonne-energie",'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.4 1.4M17.6 17.6 19 19M19 5l-1.4 1.4M6.4 17.6 5 19"/>'],
+flame:["Verwarming",'<path d="M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-5 1-9z"/>'],
+hammer:["Hamer",'<path d="M14 4l6 6-3 3-6-6z"/><path d="M12.5 11.5 4 20"/>'],
+pipe:["Leidingen",'<path d="M4 7h9a3 3 0 0 1 3 3v10"/><path d="M2 5v4M14 20h4"/>'],
+bath:["Sanitair",'<path d="M3 12h18v3a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"/><path d="M6 12V6a2 2 0 0 1 3.5-1.3M6 19l-1 2M18 19l1 2"/>'],
+kitchen:["Keuken",'<path d="M5 3v8M8 3v8M5 7h3M6.5 11v10M16 3c-2 2-3 5-3 8h3v10"/>'],
+bed:["Slaapkamer",'<path d="M3 18V7M3 14h18v4M21 14v-3a3 3 0 0 0-3-3h-8v6"/><circle cx="7" cy="11" r="2"/>'],
+stairs:["Trap",'<path d="M3 21h5v-5h5v-5h5V6h3"/>'],
+garage:["Garage",'<path d="M3 21V9l9-6 9 6v12"/><path d="M7 21v-8h10v8M7 17h10"/>'],
+lift:["Lift",'<rect x="5" y="3" width="14" height="18" rx="1"/><path d="m9 10 3-3 3 3M9 14l3 3 3-3"/>'],
+fence:["Omheining",'<path d="M5 21V8l2-3 2 3v13M15 21V8l2-3 2 3v13M3 12h18M3 17h18"/>'],
+tree:["Tuin",'<circle cx="12" cy="9" r="6"/><path d="M12 15v7"/>'],
+leaf:["Duurzaam",'<path d="M5 19c0-9 5-14 15-14 0 10-5 15-14 15"/><path d="M5 19c3-5 6-8 11-10"/>'],
+wind:["Ventilatie",'<path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8"/>'],
+snow:["Koeling",'<path d="M12 2v20M3.3 7l17.4 10M3.3 17 20.7 7"/>'],
+thermo:["Klimaat",'<path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/>'],
+lamp:["Verlichting",'<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>'],
+plug:["Stekker",'<path d="M9 2v5M15 2v5"/><path d="M6 7h12v4a6 6 0 0 1-12 0z"/><path d="M12 17v5"/>'],
+umbrella:["Waterdicht",'<path d="M3 12a9 9 0 0 1 18 0z"/><path d="M12 12v7a2 2 0 0 0 4 0"/>'],
+shield:["Veiligheid",'<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/>'],
+helmet:["Bouwhelm",'<path d="M4 16a8 8 0 0 1 16 0"/><path d="M2 16h20v3H2z"/><path d="M12 8v8"/>'],
+lock:["Beveiliging",'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'],
+crane:["Kraan",'<path d="M6 21V3l12 5H6"/><path d="M18 8v5"/><path d="M4 21h4"/>'],
+brick:["Baksteen",'<rect x="3" y="7" width="18" height="10" rx="1"/><path d="M3 12h18M8 7v5M14 12v5"/>'],
+box:["Materiaal",'<path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/>'],
+container:["Container",'<path d="M3 8h18l-2 11H5z"/><path d="M3 8l1-3h16l1 3"/>'],
+ruler:["Meetlat",'<rect x="2" y="8" width="20" height="8" rx="1"/><path d="M6 8v3M10 8v4M14 8v3M18 8v4"/>'],
+calc:["Berekening",'<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M8 6h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h.01M12 19h.01M16 19h.01"/>'],
+check:["Checklist",'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM9 13l2 2 4-4"/>'],
+calendar:["Planning",'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'],
+mail:["E-mail",'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>'],
+users:["Contacten",'<circle cx="9" cy="8" r="3.5"/><path d="M2 20a7 7 0 0 1 14 0"/><circle cx="17" cy="9" r="2.5"/><path d="M18 14a5 5 0 0 1 4 5"/>'],
+pin:["Locatie",'<path d="M12 21s7-6 7-12a7 7 0 0 0-14 0c0 6 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/>'],
+tag:["Etiket",'<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.3"/>']};
+const ICON_BY_NAME={"dak":"roof","roof":"roof","buitenschrijnwerk":"window","exterior joinery":"window","gevel":"facade","facade":"facade","isolatie":"layers","insulation":"layers"};
+function iconId(c){return (c.icon&&ICONS[c.icon])?c.icon:(ICON_BY_NAME[c.name.toLowerCase()]||"folder")}
+function svgI(id,extra){return '<svg '+(extra||"")+' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+ICONS[id][1]+'</svg>'}
+function ico(c){return svgI(iconId(c),'class="ci" style="--c:'+catCol(c.name)+'"')}
+async function pickIcon(cname){const c=catObj(cname);if(!c)return;
+  const d=$("ico"),cur_=iconId(c);$("iTitle").textContent="Pictogram voor “"+cname+"”";
+  $("iGrid").innerHTML=Object.keys(ICONS).map(k=>'<button type="button" class="ib'+(k===cur_?" sel":"")+'" data-i="'+k+'">'+svgI(k)+'<span>'+ICONS[k][0]+'</span></button>').join("");
+  $("iGrid").onclick=e=>{const b=e.target.closest(".ib");if(!b)return;c.icon=b.dataset.i;d.close();saveCats();render()};
+  $("iNo").onclick=()=>d.close();d.showModal()}
+function catCol(n){const c=catObj(n);if(!c)return "hsl(205 58% 52%)";if(c.hue==null)c.hue=(cats.indexOf(c)*53+205)%360;return "hsl("+c.hue+" 58% 52%)"}
+function renderCats(){
+  let h=`<button class="cat${cur==="All"?" on":""}" data-c="All"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Home</span><span>${quotes.length}</span></button>`;
+  cats.forEach(c=>{
+    h+=`<button class="cat${cur===c.name&&!curSub?" on":""}" data-c="${esc(c.name)}" draggable="true" aria-expanded="${openCats.has(c.name)}"><span>${ico(c)}${esc(c.name)}</span><span>${quotes.filter(x=>x.category===c.name).length}</span></button>`;
+    if(openCats.has(c.name))c.subs.forEach(s=>{h+=`<button class="cat sub${curSub===s?" on":""}" data-c="${esc(c.name)}" data-s="${esc(s)}"><span>${esc(s)}</span><span>${quotes.filter(x=>x.category===c.name&&x.subcategory===s).length}</span></button>`});
+  });
+  $("cats").innerHTML=h;
+  $("fCat").innerHTML=cats.map(c=>`<option>${esc(c.name)}</option>`).join("");
+  
+  
+  
+  
+  
+}
+function fillSubs(sel){const c=catObj($("fCat").value);$("fSub").innerHTML='<option value="">Geen</option>'+(c?c.subs:[]).map(s=>`<option>${esc(s)}</option>`).join("");$("fSub").value=sel||""}
+function render(){
+  renderCats();
+  $("title").textContent=cur==="All"?"Alle offertes":cur+(curSub?" / "+curSub:"");
+  const term=$("q").value.toLowerCase();
+  const ov=cur==="All"&&!term;
+  $("title").textContent=ov?"Alle categorieën":(term?"Zoekresultaten":cur+(curSub?" / "+curSub:""));
+  $("wrap").hidden=ov;$("overview").hidden=!ov;
+  if(ov){
+    $("overview").innerHTML=cats.length?cats.map(c=>{const n=quotes.filter(x=>x.category===c.name).length,m=c.subs.length;
+      return `<div class="ovc" style="--c:${catCol(c.name)}"><button class="ovh" data-c="${esc(c.name)}"><span class="ovi">${ico(c)}</span><span class="ovt"><strong>${esc(c.name)}</strong><small>${n===1?"1 offerte":n+" offertes"}${m?" · "+m+(m===1?" subcategorie":" subcategorieën"):""}</small></span><span class="ovn${n?"":" z"}">${n}</span></button>${m?`<div class="ovs">${c.subs.map(s=>`<button class="tag" data-c="${esc(c.name)}" data-s="${esc(s)}">${esc(s)} · ${quotes.filter(x=>x.category===c.name&&x.subcategory===s).length}</button>`).join("")}</div>`:""}</div>`}).join(""):'<p class="note">Nog geen categorieën. Voeg er een toe in de zijbalk.</p>';
+    return;
+  }
+  let list=quotes.filter(x=>(term||((cur==="All"||x.category===cur)&&(!curSub||x.subcategory===curSub)))&&(!term||[x.supplier,x.project,x.notes,x.category,x.subcategory,(x.tags||[]).join(" ")].join(" ").toLowerCase().includes(term)));
+  if(sortKey){
+    const val=x=>sortKey==="amount"?(x.amount===""||x.amount==null?null:x.amount):(x.date||null);
+    list.sort((a,b)=>{const p=val(a),q=val(b);if(p===null&&q===null)return 0;if(p===null)return 1;if(q===null)return -1;return (p<q?-1:p>q?1:0)*sortDir});
+  }else list.sort((a,b)=>(a.category||"").localeCompare(b.category||"")||(a.subcategory||"").localeCompare(b.subcategory||"")||(a.amount===""?1e15:a.amount)-(b.amount===""?1e15:b.amount));
+  const arrow=k=>sortKey===k?(sortDir===1?" ▲":" ▼"):"";
+  $("thAmt").textContent="Bedrag"+arrow("amount");$("thDate").textContent="Ontvangen"+arrow("date");
+  $("thAmt").classList.toggle("on",sortKey==="amount");$("thDate").classList.toggle("on",sortKey==="date");
+  const lowest={},gk=x=>x.category+"|"+(x.subcategory||"");
+  quotes.forEach(x=>{if(x.amount!==""&&x.amount!=null&&(lowest[gk(x)]==null||x.amount<lowest[gk(x)]))lowest[gk(x)]=x.amount});
+  const showCat=cur==="All"||!!term;
+  $("rows").innerHTML=list.map(x=>`<tr>
+   <td><strong>${esc(x.supplier)}</strong>${(showCat||(!curSub&&x.subcategory))?`<div class="note">${esc(x.category)}${x.subcategory?" / "+esc(x.subcategory):""}</div>`:""}${x.notes?`<div class="note">${esc(x.notes)}</div>`:""}${(x.tags||[]).length?`<div>${x.tags.map(t=>`<button class="tag" data-tag="${esc(t)}">${esc(t)}</button>`).join("")}</div>`:""}</td>
+   <td>${esc(x.project)||"–"}</td>
+   <td class="amt">${money(x.amount)}${x.amount!==""&&x.amount===lowest[gk(x)]&&quotes.filter(y=>gk(y)===gk(x)&&y.amount!=="").length>1?'<span class="low">Laagste</span>':""}</td>
+   <td>${esc(x.date)||"–"}</td>
+   <td>${(x.blob||x.path)?`<button class="s" data-open="${x.id}">Bekijken</button>`:'<span class="note">geen</span>'}</td>
+   <td class="act"><button class="s" data-edit="${x.id}">Bewerken</button><button class="s del" data-del="${x.id}">Verwijderen</button></td></tr>`).join("");
+  $("empty").hidden=list.length>0;
+}
+
+function openForm(rec){
+  editing=rec||null;$("form").reset();$("msg").textContent="";
+  $("dlgTitle").textContent=rec?"Offerte bewerken":"Offerte toevoegen";
+  $("fCat").value=rec?rec.category:(cur!=="All"?cur:cats[0].name);fillSubs(rec?rec.subcategory:curSub);
+  if(rec){$("fSup").value=rec.supplier;$("fPro").value=rec.project;$("fAmt").value=rec.amount;$("fDate").value=rec.date;$("fNote").value=rec.notes;$("fTags").value=(rec.tags||[]).join(", ");
+    $("fileLbl").textContent="Pdf-bestand (huidig: "+(rec.fileName||"geen")+"; kies een nieuw bestand om te vervangen)"}
+  else{$("fDate").value=new Date().toISOString().slice(0,10);$("fileLbl").textContent="Pdf-bestand"}
+  $("dlg").showModal();
+}
+
+function ask(msg,ok){return new Promise(res=>{const d=$("cfm");$("cMsg").textContent=msg;$("cOk").textContent=ok||"OK";$("cNo").hidden=!ok;
+  const done=v=>{d.close();res(v)};$("cOk").onclick=()=>done(true);$("cNo").onclick=()=>done(false);d.oncancel=()=>res(false);d.showModal()})}
+let dragName=null;
+function clearDrop(){document.querySelectorAll("#cats .drop-before,#cats .drop-after,#cats .dragging").forEach(e=>e.classList.remove("drop-before","drop-after","dragging"))}
+function dropInfo(e){const b=e.target.closest&&e.target.closest("#cats .cat");if(!b||!dragName)return null;
+  const c=b.dataset.c;if(c==="All"||c===dragName)return null;
+  const r=b.getBoundingClientRect(),after=!!b.dataset.s||e.clientY>r.top+r.height/2;return{b,c,after}}
+$("cats").addEventListener("dragstart",e=>{const b=e.target.closest&&e.target.closest(".cat[draggable=true]");if(!b){e.preventDefault();return}
+  dragName=b.dataset.c;b.classList.add("dragging");e.dataTransfer.effectAllowed="move";try{e.dataTransfer.setData("text/plain",dragName)}catch(err){}});
+$("cats").addEventListener("dragover",e=>{const d=dropInfo(e);if(!d)return;e.preventDefault();e.dataTransfer.dropEffect="move";
+  document.querySelectorAll("#cats .drop-before,#cats .drop-after").forEach(x=>x.classList.remove("drop-before","drop-after"));
+  d.b.classList.add(d.after?"drop-after":"drop-before")});
+$("cats").addEventListener("drop",e=>{const d=dropInfo(e);if(!d)return;e.preventDefault();
+  const from=cats.findIndex(c=>c.name===dragName);if(from<0){clearDrop();dragName=null;return}
+  const [m]=cats.splice(from,1);let to=cats.findIndex(c=>c.name===d.c);if(to<0)to=cats.length;if(d.after)to++;
+  cats.splice(to,0,m);dragName=null;clearDrop();saveCats();render()});
+$("cats").addEventListener("dragend",()=>{dragName=null;clearDrop()});
+$("cats").onclick=e=>{const b=e.target.closest(".cat");if(b){const c=b.dataset.c,s=b.dataset.s||"";
+  const toggleClose=c!=="All"&&!s&&cur===c&&!curSub&&openCats.has(c);
+  openCats.clear();if(c!=="All"&&!toggleClose)openCats.add(c);
+  cur=c;curSub=s;$("q").value="";render()}};
+$("catForm").onsubmit=e=>{e.preventDefault();const v=$("newCat").value.trim();
+  if(v&&!cats.some(c=>c.name.toLowerCase()===v.toLowerCase())){cats.push({name:v,subs:[]});saveCats();cur=v;curSub=""}$("newCat").value="";render()};
+
+async function deleteCurrent(){
+  const c=catObj(cur);if(!c)return;
+  if(curSub){
+    const n=quotes.filter(x=>x.category===cur&&x.subcategory===curSub);
+    if(!await ask("Subcategorie \""+curSub+"\" verwijderen?"+(n.length?" De "+n.length+" offerte(s) blijven in "+cur+" staan, zonder subcategorie.":""),"Verwijderen"))return;
+    for(const x of n){x.subcategory="";try{await put(x)}catch(e){}}
+    c.subs=c.subs.filter(s=>s!==curSub);curSub="";
+  }else{
+    if(quotes.some(x=>x.category===cur)){await ask("\""+cur+"\" bevat nog offertes. Verplaats of verwijder die eerst en verwijder dan de categorie.");return}
+    if(!await ask("Categorie \""+cur+"\""+(c.subs.length?" en de bijbehorende subcategorieën":"")+" verwijderen?","Verwijderen"))return;
+    cats=cats.filter(x=>x.name!==cur);openCats.delete(cur);cur="All";
+  }
+  saveCats();render();
+}
+function renameDlg(kind,old,title,okLabel){return new Promise(res=>{const d=$("ren");$("rTitle").textContent=title||"Hernoemen";$("rOk").textContent=okLabel||"Hernoemen";$("rIn").value=old;$("rMsg").textContent="";
+  const done=v=>{d.close();res(v)};
+  const ok=()=>{const v=$("rIn").value.trim();if(!v){$("rMsg").textContent="Geef een naam in.";return}done(v)};
+  $("rOk").onclick=ok;$("rNo").onclick=()=>done(null);$("rIn").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();ok()}};
+  d.oncancel=()=>res(null);d.showModal();$("rIn").select()})}
+async function renameItem(cname,sname){
+  const c=catObj(cname);if(!c)return;
+  const v=await renameDlg("",sname||cname,sname?"Subcategorie hernoemen":"Categorie hernoemen");
+  if(!v||v===(sname||cname))return;
+  if(sname){
+    if(c.subs.some(s=>s!==sname&&s.toLowerCase()===v.toLowerCase())){await ask("Die subcategorie bestaat al.");return}
+    c.subs=c.subs.map(s=>s===sname?v:s);
+    for(const q of quotes)if(q.category===cname&&q.subcategory===sname){q.subcategory=v;if(!dir)await put(q).catch(()=>{})}
+    if(cur===cname&&curSub===sname)curSub=v;
+  }else{
+    if(cats.some(x=>x!==c&&x.name.toLowerCase()===v.toLowerCase())){await ask("Die categorie bestaat al.");return}
+    c.name=v;
+    for(const q of quotes)if(q.category===cname){q.category=v;if(!dir)await put(q).catch(()=>{})}
+    if(openCats.delete(cname))openCats.add(v);
+    if(cur===cname)cur=v;
+  }
+  saveCats();render();
+}
+async function addSub(cname){const c=catObj(cname);if(!c)return;
+  const v=await renameDlg("","","Nieuwe subcategorie in “"+cname+"”","Toevoegen");
+  if(!v)return;
+  if(c.subs.some(s=>s.toLowerCase()===v.toLowerCase())){await ask("Die subcategorie bestaat al.");return}
+  c.subs.push(v);saveCats();cur=cname;curSub=v;openCats.clear();openCats.add(cname);$("q").value="";render()}
+
+let ctxT=null;
+function showCtx(e,c,s){e.preventDefault();ctxT={c,s};const m=$("ctx"),n=s||c;
+  m.querySelector("[data-a=ren]").textContent="“"+n+"” hernoemen";m.querySelector("[data-a=del]").textContent="“"+n+"” verwijderen";
+  m.querySelector("[data-a=sub]").hidden=!!s;m.querySelector("[data-a=ico]").hidden=!!s;m.hidden=false;m.style.left=Math.max(4,Math.min(e.clientX,innerWidth-m.offsetWidth-6))+"px";m.style.top=Math.max(4,Math.min(e.clientY,innerHeight-m.offsetHeight-6))+"px"}
+$("ctx").onclick=e=>{const b=e.target.closest("button");if(!b||!ctxT)return;const{c,s}=ctxT;$("ctx").hidden=true;
+  if(b.dataset.a==="ico")pickIcon(c);
+  else if(b.dataset.a==="sub")addSub(c);
+  else if(b.dataset.a==="ren")renameItem(c,s);
+  else{cur=c;curSub=s;$("q").value="";openCats.clear();openCats.add(c);render();deleteCurrent()}};
+document.addEventListener("click",e=>{if(!e.target.closest("#ctx"))$("ctx").hidden=true});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")$("ctx").hidden=true});
+window.addEventListener("scroll",()=>{$("ctx").hidden=true},true);
+$("cats").oncontextmenu=e=>{const b=e.target.closest(".cat");if(!b||b.dataset.c==="All")return;showCtx(e,b.dataset.c,b.dataset.s||"")};
+$("overview").oncontextmenu=e=>{const b=e.target.closest("button");if(!b)return;showCtx(e,b.dataset.c,b.dataset.s||"")};
+let appName="Offertearchief";
+function applyTitle(v){appName=v;$("appTitle").textContent=v;document.title=v}
+async function changeTitle(e){if(e)e.preventDefault();
+  const v=await renameDlg("title",appName,"Titel wijzigen","Opslaan");
+  if(!v||v===appName)return;
+  applyTitle(v);try{localStorage.setItem("qa-title",v)}catch(err){}
+  if(dir)saveIndex().catch(()=>{})}
+$("appTitle").ondblclick=changeTitle;$("appTitle").oncontextmenu=changeTitle;
+try{const t=localStorage.getItem("qa-title");if(t)applyTitle(t)}catch(e){}
+$("pickDir").onclick=async()=>{
+  if(pending&&!dir){try{if((await pending.requestPermission({mode:"readwrite"}))==="granted"){const h=pending;pending=null;await useDir(h)}}catch(e){}updateStore();return}
+  if(!window.showDirectoryPicker){await ask("Deze browser kan niet opslaan in een gekozen map. Gebruik Chrome of Edge op een computer.");return}
+  let h;try{h=await window.showDirectoryPicker({mode:"readwrite"})}catch(e){if(e.name!=="AbortError")await ask("De browser blokkeert de toegang tot mappen op deze pagina. Open in plaats daarvan het gedownloade app-bestand op je computer in Chrome of Edge.");return}
+  try{await useDir(h)}catch(e){dir=null;await ask("Die map kan niet gebruikt worden.")}
+  updateStore();
+};
+$("useBrowser").onclick=async()=>{dir=null;pending=null;await metaOp("readwrite",s=>s.delete("dir"));cats=loadCats();quotes=await getAll();
+  quotes.forEach(x=>{if(!catObj(x.category))cats.push({name:x.category,subs:[]})});cur="All";curSub="";updateStore();render()};
+$("fCat").onchange=()=>fillSubs("");
+$("overview").onclick=e=>{const b=e.target.closest("button");if(!b)return;cur=b.dataset.c;curSub=b.dataset.s||"";$("q").value="";openCats.clear();openCats.add(cur);render()};
+$("q").oninput=render;
+$("addBtn").onclick=async()=>{if(!cats.length){await ask("Voeg eerst een categorie toe.");return}openForm()};
+$("cancel").onclick=()=>$("dlg").close();
+$("form").onsubmit=async e=>{
+  e.preventDefault();
+  const f=$("fFile").files[0];
+  if(f&&!/pdf$/i.test(f.name)&&f.type!=="application/pdf"){$("msg").textContent="Kies een pdf-bestand.";return}
+  if(!$("fSup").value.trim()){$("msg").textContent="Geef de naam van de leverancier in.";return}
+  if(!f&&!editing){$("msg").textContent="Voeg de pdf toe.";return}
+  const a=$("fAmt").value;
+  const rec={id:editing?editing.id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+    category:$("fCat").value,subcategory:$("fSub").value,supplier:$("fSup").value.trim(),project:$("fPro").value.trim(),
+    amount:a===""?"":parseFloat(a),date:$("fDate").value,notes:$("fNote").value.trim(),tags:$("fTags").value.split(",").map(t=>t.trim()).filter(Boolean),
+    fileName:f?f.name:editing.fileName,blob:f?new Blob([await f.arrayBuffer()],{type:"application/pdf"}):editing.blob};
+  try{
+    if(dir){
+      const old=editing&&editing.path,want=[rec.category,rec.subcategory].filter(Boolean).map(san).join("/");
+      if(f){rec.path=await writePdf(rec,rec.blob);if(old&&old!==rec.path)await removePdf(old).catch(()=>{})}
+      else if(old&&old.split("/").slice(0,-1).join("/")!==want){rec.path=await writePdf(rec,await readPdf(old));await removePdf(old).catch(()=>{})}
+      else rec.path=old;
+      delete rec.blob;
+    }else await put(rec);
+    const i=quotes.findIndex(x=>x.id===rec.id);i>=0?quotes[i]=rec:quotes.push(rec);
+    if(dir)await saveIndex();
+  }catch(err){$("msg").textContent="Opslaan mislukt. Controleer of de map nog beschikbaar is of dat de browseropslag niet vol is.";return}
+  $("dlg").close();$("q").value="";cur=rec.category;curSub=rec.subcategory||"";openCats.clear();openCats.add(cur);render();
+};
+$("rows").onclick=async e=>{
+  const t=e.target.closest("button");if(!t)return;
+  if(t.dataset.tag){$("q").value=t.dataset.tag;render();return}
+  const id=t.dataset.open||t.dataset.edit||t.dataset.del;const rec=quotes.find(x=>x.id===id);if(!rec)return;
+  if(t.dataset.open){if(objUrl)URL.revokeObjectURL(objUrl);let bl;try{bl=rec.path&&dir?await readPdf(rec.path):rec.blob}catch(err){await ask("Dit bestand is niet gevonden in de map. Het is misschien verplaatst of verwijderd.");return}
+    objUrl=URL.createObjectURL(bl);
+    dlRec=rec;dlBlob=bl;$("vName").textContent=rec.supplier+" – "+rec.fileName;$("vFrame").src=objUrl;$("view").showModal()}
+  else if(t.dataset.edit)openForm(rec);
+  else if(await ask("De offerte van "+rec.supplier+" verwijderen? De pdf wordt ook verwijderd.","Verwijderen")){if(dir){if(rec.path)await removePdf(rec.path).catch(()=>{});quotes=quotes.filter(x=>x.id!==id);await saveIndex()}else{await del(id);quotes=quotes.filter(x=>x.id!==id)}render()}
+};
+$("vDown").onclick=async()=>{if(!dlBlob||!dlRec)return;
+  let name=(dlRec.fileName||"offerte.pdf");if(!/\.pdf$/i.test(name))name+=".pdf";
+  let dl=null;try{if(window.claude&&claude.use)dl=await claude.use("downloads")}catch(e){}
+  if(dl){try{await dl.save({filename:name,data:dlBlob})}catch(e){if(e&&e.code&&e.code!=="declined")await ask("Downloaden is mislukt. Probeer het opnieuw.")}return}
+  const a=document.createElement("a");a.href=objUrl;a.download=name;document.body.appendChild(a);a.click();a.remove()};
+$("vClose").onclick=()=>{$("view").close();$("vFrame").src="about:blank"};
+
+/* Published pages block normal form submission, so buttons and Enter call the handlers directly */
+["catForm","form"].forEach(id=>{const f=$(id);f.setAttribute("novalidate","");
+  const go=()=>{$("msg").textContent="";Promise.resolve(f.onsubmit({preventDefault(){}})).catch(err=>{$("msg").textContent="Opslaan mislukt: "+(err&&err.message||err)})};
+  const b=f.querySelector("button[type=submit]");if(b){b.type="button";b.onclick=go}
+  f.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.tagName==="INPUT"){e.preventDefault();go()}})});
+
+(async()=>{cats=loadCats();db=await openDB();quotes=await getAll();
+  quotes.forEach(x=>{let c=catObj(x.category);if(!c){c={name:x.category,subs:[]};cats.push(c)}if(x.subcategory&&!c.subs.includes(x.subcategory))c.subs.push(x.subcategory)});
+  try{const h=db?await metaOp("readonly",s=>s.get("dir")):null;
+    if(h){if((await h.queryPermission({mode:"readwrite"}))==="granted")await useDir(h);else pending=h}}catch(e){}
+  updateStore();render();
+  if(!db)$("empty").hidden=false,$("empty").textContent="Browseropslag is niet beschikbaar, dus offertes kunnen hier niet worden opgeslagen."})();
+</script>
+</body>
+</html>
