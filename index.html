@@ -62,6 +62,36 @@ td.amt{font-weight:600;white-space:nowrap}
 .note{color:var(--mute);font-size:13px}
 .tag{font:inherit;font-size:12px;background:var(--bg);color:var(--acc);border:1px solid var(--line);border-radius:10px;padding:1px 8px;margin:4px 4px 0 0;cursor:pointer}
 .tag:hover{border-color:var(--acc)}
+.welcome{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin:0 0 18px}
+.welcome h2{margin:0;font:700 30px/1.1 'Barlow Condensed',Arial Narrow,sans-serif}
+.welcome{align-items:center}
+.welcome p{margin:0;color:var(--mute);font-size:14px}
+.welcome p::first-letter{text-transform:uppercase}
+.qa{display:flex;gap:8px;flex-wrap:wrap}
+.qa button{padding:8px 14px;font-size:14px}
+.hubs{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;margin-bottom:16px}
+.hub{--k:var(--acc);background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--k);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.hubm{display:flex;align-items:center;gap:14px;width:100%;background:none;border:0;padding:0;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.hubm .hi{flex:none;width:52px;height:52px;border-radius:14px;display:grid;place-items:center;color:var(--k);background:color-mix(in srgb,var(--k) 14%,transparent)}
+.hubm .hi svg{width:26px;height:26px}
+.hubm .ht{flex:1;min-width:0}
+.hubm strong{display:block;font:700 26px/1.1 'Barlow Condensed',Arial Narrow,sans-serif}
+.hubm small{color:var(--mute);font-size:13px}
+.hubm .go{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--k);border:1px solid var(--line);transition:background .15s,color .15s}
+.hubm .go svg{width:18px;height:18px}
+.hubm:hover .go{background:var(--k);color:#fff;border-color:var(--k)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips.cap{max-height:72px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent;padding-right:4px}
+.chips.cap::-webkit-scrollbar{width:6px}.chips.cap::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px}
+.chip{display:inline-flex;align-items:center;gap:7px;font:inherit;font-size:13px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:5px 12px 5px 10px;cursor:pointer}
+.chip svg{width:15px;height:15px;color:var(--c,var(--k))}
+.chip b{font-weight:700;color:var(--mute)}
+.chip:hover{border-color:var(--k)}
+.rbar{display:flex;height:10px;border-radius:999px;overflow:hidden;background:var(--line)}
+.rbar i{display:block;height:100%}
+.rleg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--mute)}
+.rleg span{display:inline-flex;align-items:center}
+.rleg .rdot{margin-right:6px}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:16px}
 .kpi{--k:var(--acc);display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;position:relative;overflow:hidden}
 .kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--k)}
@@ -153,7 +183,7 @@ button.sech{width:100%;background:none;border:0;padding:4px 0;margin:0 0 10px;cu
 button.sech:hover h3{color:var(--acc)}
 button.sech .chv{width:18px;height:18px;flex:none;color:var(--mute);transition:transform .15s}
 button.sech[aria-expanded=false] .chv{transform:rotate(-90deg)}
-.ov{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.ov{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
 .ovc{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--c);border-radius:8px;padding:16px;transition:box-shadow .15s,transform .15s,border-color .15s}
 .ovc:hover{box-shadow:0 8px 20px rgba(0,0,0,.12);transform:translateY(-2px);border-color:var(--c)}
 .ovh{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;color:var(--ink);font:inherit;cursor:pointer;padding:0;text-align:left}
@@ -416,7 +446,7 @@ function renderCats(){
   let h=`<button class="cat${cur==="All"?" on":""}" data-c="All"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Home</span><span>${quotes.length}</span></button>`;
   h+=`<button class="cat${cur===CL&&!curSub?" on":""}" data-c="${CL}" data-k="root" aria-expanded="${openCats.has(CL)}"><span>${svgI("users")}Klanten</span><span>${clients.length}</span></button>`;
   if(openCats.has(CL))clientCats.forEach(k=>{h+=`<button class="cat sub${cur===CL&&curSub===k?" on":""}" data-c="${CL}" data-s="${esc(k)}" data-k="cat"><span>${esc(k)}</span><span>${clients.filter(x=>x.cat===k).length}</span></button>`});
-  h+=`<button class="cat${pricesOpen?" open":""}" data-c="${PR}" data-k="prices" aria-expanded="${pricesOpen}"><span>${svgI("tag")}Prijzen</span><span>${cats.length}</span></button>`;
+  h+=`<button class="cat${cur===PR?" on":""}" data-c="${PR}" data-k="prices" aria-expanded="${pricesOpen}"><span>${svgI("tag")}Prijzen</span><span>${cats.length}</span></button>`;
   if(pricesOpen)h+='<div class="grp">';
   if(pricesOpen)cats.forEach(c=>{
     h+=`<button class="cat${cur===c.name&&!curSub?" on":""}" data-c="${esc(c.name)}" draggable="true" aria-expanded="${openCats.has(c.name)}"><span>${ico(c)}${esc(c.name)}</span><span>${quotes.filter(x=>x.category===c.name).length}</span></button>`;
@@ -433,6 +463,7 @@ function renderCats(){
 }
 function fillSubs(sel){const c=catObj($("fCat").value);$("fSub").innerHTML='<option value="">Geen</option>'+(c?c.subs:[]).map(s=>`<option>${esc(s)}</option>`).join("");$("fSub").value=sel||""}
 const MONTHS=["jan","feb","mrt","apr","mei","jun","jul","aug","sep","okt","nov","dec"];
+function greeting(){const h=new Date().getHours();return h<6?"Goedenacht":h<12?"Goedemorgen":h<18?"Goedemiddag":"Goedenavond"}
 function renderDash(){
   const d=$("dash"),now=new Date(),ym=x=>x.date?x.date.slice(0,7):"";
   const key=(y,m)=>y+"-"+String(m+1).padStart(2,"0");
@@ -441,7 +472,17 @@ function renderDash(){
   const noAmt=quotes.filter(x=>x.amount===""||x.amount==null).length;
   const empty=cats.filter(c=>!quotes.some(x=>x.category===c.name)).length;
   const kpi=(icon,col,l,v,sub)=>`<div class="kpi" style="--k:${col}"><span class="ki">${svgI(icon)}</span><div><b>${v}</b><small>${l}</small><span>${sub}</span></div></div>`;
-  let h=`<div class="kpis">${kpi("doc","hsl(205 62% 46%)","Offertes",n,n?"in "+(cats.length-empty)+" categorieën":"nog geen offertes")}${kpi("calendar","hsl(160 55% 38%)","Deze maand",month,MONTHS[now.getMonth()]+" "+now.getFullYear())}${kpi("euro",noAmt?"hsl(32 88% 46%)":"hsl(160 55% 38%)","Zonder bedrag",noAmt,noAmt?"vul het bedrag aan":"alles ingevuld")}${kpi("folder","hsl(265 45% 54%)","Lege categorieën",empty,empty?"nog geen offerte":"allemaal in gebruik")}</div>`;
+    const day=now.toLocaleDateString("nl-BE",{weekday:"long",day:"numeric",month:"long"});
+  const arrow='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+  const rc={good:0,avg:0,bad:0,none:0};clients.forEach(c=>rc[c.rating&&RATES[c.rating]?c.rating:"none"]++);
+  const nc=clients.length,usedCats=cats.length-empty;
+  const pChips=cats.map(c=>`<button class="chip" style="--c:${catCol(c.name)}" data-c="${esc(c.name)}">${svgI(iconId(c))}${esc(c.name)} <b>${quotes.filter(x=>x.category===c.name).length}</b></button>`).join("")||'<span class="note">Rechtsklik op “Prijzen” in de zijbalk om een categorie toe te voegen.</span>';
+  const cChips=clientCats.map(k=>`<button class="chip" data-go="clients" data-s="${esc(k)}">${esc(k)} <b>${clients.filter(x=>x.cat===k).length}</b></button>`).join("");
+  const rbar=nc?`<div class="rbar" title="Beoordeling van je klanten">${["good","avg","bad"].filter(k=>rc[k]).map(k=>`<i style="width:${rc[k]/nc*100}%;background:${RATES[k][1]}"></i>`).join("")}${rc.none?`<i style="width:${rc.none/nc*100}%;background:var(--line)"></i>`:""}</div><div class="rleg">${["good","avg","bad"].map(k=>`<span><i class="rdot" style="--r:${RATES[k][1]}"></i>${RATES[k][0]} ${rc[k]}</span>`).join("")}${rc.none?`<span>Niet beoordeeld ${rc.none}</span>`:""}</div>`:'<p class="dnote">Nog geen klanten toegevoegd.</p>';
+  let h=`<div class="welcome"><p>${esc(day)} · ${n===1?"1 offerte":n+" offertes"} in het archief</p><div class="qa"><button class="s" data-act="client">Klant toevoegen</button></div></div>
+  <div class="hubs"><div class="hub" style="--k:hsl(205 62% 46%)"><button class="hubm" data-go="prices"><span class="hi">${svgI("tag")}</span><span class="ht"><strong>Prijzen</strong><small>${n===1?"1 offerte":n+" offertes"} in ${cats.length===1?"1 categorie":cats.length+" categorieën"}</small></span><span class="go">${arrow}</span></button><div class="chips cap" tabindex="0" aria-label="Categorieën in Prijzen">${pChips}</div></div>
+  <div class="hub" style="--k:hsl(160 55% 38%)"><button class="hubm" data-go="clients"><span class="hi">${svgI("users")}</span><span class="ht"><strong>Klanten</strong><small>${nc===1?"1 klant":nc+" klanten"} in ${clientCats.length===1?"1 categorie":clientCats.length+" categorieën"}</small></span><span class="go">${arrow}</span></button>${rbar}${cChips?`<div class="chips cap" tabindex="0" aria-label="Klantcategorieën">${cChips}</div>`:""}</div></div>
+  <div class="kpis">${kpi("doc","hsl(205 62% 46%)","Offertes",n,n?"in "+usedCats+(usedCats===1?" categorie":" categorieën"):"nog geen offertes")}${kpi("calendar","hsl(160 55% 38%)","Deze maand",month,MONTHS[now.getMonth()]+" "+now.getFullYear())}${kpi("euro",noAmt?"hsl(32 88% 46%)":"hsl(160 55% 38%)","Zonder bedrag",noAmt,noAmt?"vul het bedrag aan":"alles ingevuld")}${kpi("users","hsl(265 45% 54%)","Klanten",nc,nc?rc.good+" goed · "+rc.bad+" slecht":"nog geen klanten")}</div>`;
   if(!n){h+='<div class="dcard" style="margin-bottom:24px"><p class="dnote">Voeg je eerste offerte toe met “Offerte toevoegen”. Hier verschijnen dan overzichten van je offertes.</p></div>'}
   else{
     const per=cats.map(c=>({c,k:quotes.filter(x=>x.category===c.name).length})).filter(r=>r.k).sort((a,b)=>b.k-a.k),mx=Math.max(...per.map(r=>r.k));
@@ -453,21 +494,24 @@ function renderDash(){
     const rec=quotes.slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"")).slice(0,5).map(x=>{const c=catObj(x.category)||{name:x.category};return `<button class="rec" style="--c:${catCol(x.category)}" data-c="${esc(x.category)}" data-s="${esc(x.subcategory||"")}"><span class="ri">${svgI(iconId(c))}</span><strong>${esc(x.supplier)}</strong><span class="a">${money(x.amount)}</span><small>${esc(x.category)}${x.subcategory?" / "+esc(x.subcategory):""}${x.project?" · "+esc(x.project):""}</small><small class="d">${esc(x.date)||""}</small></button>`}).join("");
     h+=`<div class="dgrid"><div class="dcard"><div class="dh"><h3>Offertes per categorie</h3><p>Verdeling van al je offertes</p></div>${bars}</div><div class="dcard"><div class="dh"><h3>Ontvangen per maand</h3><p>De laatste zes maanden</p></div><div class="plot"><div class="cols">${cols}</div></div><div class="mlab">${mlab}</div></div><div class="dcard wide"><div class="dh"><h3>Laatst ontvangen</h3><p>De vijf nieuwste offertes</p></div>${rec}</div></div>`;
   }
-  h+=`<div class="sech"><h3>Offertes</h3></div>`;d.innerHTML=h}
-$("dash").onclick=e=>{const b=e.target.closest("button[data-c]");if(!b)return;pricesOpen=true;cur=b.dataset.c;curSub=b.dataset.s||"";$("q").value="";openCats.clear();openCats.add(cur);render()};
+  d.innerHTML=h}
+$("dash").onclick=e=>{
+  const a=e.target.closest("button[data-act]");if(a){if(a.dataset.act==="quote")$("addBtn").click();else(async()=>{if(await guard())openClientForm()})();return}
+  const g=e.target.closest("button[data-go]");if(g){$("q").value="";openCats.clear();
+    if(g.dataset.go==="prices"){pricesOpen=true;cur=PR;curSub=""}else{pricesOpen=false;cur=CL;curSub=g.dataset.s||"";clientRating="";openCats.add(CL)}render();return}
+  const b=e.target.closest("button[data-c]");if(!b)return;pricesOpen=true;cur=b.dataset.c;curSub=b.dataset.s||"";$("q").value="";openCats.clear();openCats.add(cur);render()};
 function render(){
   renderCats();
   $("clients").hidden=cur!==CL;
   $("addBtn").textContent=cur===CL?"Klant toevoegen":"Offerte toevoegen";
   $("q").placeholder=cur===CL?"Zoek klanten (a, b)":"Zoek (woord, woord)";
   if(cur===CL){$("wrap").hidden=true;$("overview").hidden=true;$("dash").hidden=true;renderClients();return}
-  $("title").textContent=cur==="All"?"Alle offertes":cur+(curSub?" / "+curSub:"");
   const term=$("q").value.toLowerCase();
-  const ov=cur==="All"&&!term;
-  $("title").textContent=ov?"Overzicht":(term?"Zoekresultaten":cur+(curSub?" / "+curSub:""));
-  $("wrap").hidden=ov;$("overview").hidden=!ov;$("dash").hidden=!ov;
+  const ov=(cur==="All"||cur===PR)&&!term,isPr=cur===PR;
+  $("title").textContent=ov?(isPr?"Prijzen":greeting()):(term?"Zoekresultaten":cur+(curSub?" / "+curSub:""));
+  $("wrap").hidden=ov;$("overview").hidden=!ov||!isPr;$("dash").hidden=!ov||isPr;
   if(ov){
-    renderDash();
+    if(!isPr)renderDash();
     $("overview").innerHTML=cats.length?cats.map(c=>{const n=quotes.filter(x=>x.category===c.name).length,m=c.subs.length;
       return `<div class="ovc" style="--c:${catCol(c.name)}"><button class="ovh" data-c="${esc(c.name)}"><span class="ovi">${ico(c)}</span><span class="ovt"><strong>${esc(c.name)}</strong><small>${n===1?"1 offerte":n+" offertes"}${m?" · "+m+(m===1?" subcategorie":" subcategorieën"):""}</small></span><span class="ovn${n?"":" z"}">${n}</span></button>${m?`<div class="ovs">${c.subs.map(s=>`<button class="tag" data-c="${esc(c.name)}" data-s="${esc(s)}">${esc(s)} · ${quotes.filter(x=>x.category===c.name&&x.subcategory===s).length}</button>`).join("")}</div>`:""}</div>`}).join(""):'<p class="note">Nog geen categorieën. Voeg er een toe in de zijbalk.</p>';
     return;
@@ -522,10 +566,10 @@ $("cats").addEventListener("drop",async e=>{const d=dropInfo(e);if(!d)return;e.p
   cats.splice(to,0,m);dragName=null;saveCats();render()});
 $("cats").addEventListener("dragend",()=>{dragName=null;clearDrop()});
 $("cats").onclick=e=>{const b=e.target.closest(".cat");if(b){const c=b.dataset.c,s=b.dataset.s||"";
-  if(c===PR){pricesOpen=!pricesOpen;if(!pricesOpen)cats.forEach(x=>openCats.delete(x.name));else openCats.delete(CL);render();return}
+  if(c===PR){const close=cur===PR&&pricesOpen;pricesOpen=!close;openCats.clear();cur=PR;curSub="";$("q").value="";render();return}
   const toggleClose=c!=="All"&&!s&&cur===c&&!curSub&&openCats.has(c);
   openCats.clear();if(c!=="All"&&!toggleClose)openCats.add(c);
-  if(c===CL&&!s&&!toggleClose)pricesOpen=false;
+  if(c==="All"||(c===CL&&!s))pricesOpen=false;
   cur=c;curSub=s;$("q").value="";render()}};
 
 async function deleteCurrent(){
