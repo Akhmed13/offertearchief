@@ -806,6 +806,8 @@ $("rows").onclick=async e=>{
   else if(await ask("De offerte van "+rec.supplier+" verwijderen? De pdf wordt ook verwijderd.","Verwijderen")){if(dir){if(rec.path)await removePdf(rec.path).catch(()=>{});quotes=quotes.filter(x=>x.id!==id);await saveIndex()}else{await del(id);quotes=quotes.filter(x=>x.id!==id)}render()}
 };
 $("vClose").onclick=()=>{$("view").close();$("vFrame").src="about:blank"};
+$("view").addEventListener("click",e=>{const r=$("view").getBoundingClientRect();
+  if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)$("vClose").click()});
 
 /* Published pages block normal form submission, so buttons and Enter call the handlers directly */
 ["form"].forEach(id=>{const f=$(id);f.setAttribute("novalidate","");
