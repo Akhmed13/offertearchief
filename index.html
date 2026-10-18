@@ -15,7 +15,7 @@ html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 Barlow,system-ui,sans-serif}
 .app{display:grid;grid-template-columns:300px 1fr;min-height:100vh}
 aside{background:linear-gradient(180deg,var(--side),color-mix(in srgb,var(--side) 82%,#000));color:var(--sideink);padding:22px 14px 16px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
-.ver{margin-top:auto;padding:18px 6px 0;font-size:12px;opacity:.6}
+.ver{margin-top:0;padding:14px 6px 0;font-size:12px;opacity:.6}
 .brand{display:flex;align-items:center;gap:11px;margin:0 4px 22px}
 .logo{flex:none;width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--acc);color:var(--accink);box-shadow:0 4px 12px rgba(0,0,0,.3)}
 .logo svg{width:21px;height:21px}
@@ -32,7 +32,8 @@ aside h1{font:700 21px/1.1 'Barlow Condensed',Arial Narrow,sans-serif;margin:0;l
 .cat.sub.on{border-left-color:#fff}
 .delcat{margin-top:10px;width:100%;background:none;border:1px solid #ff8a80;color:#ff8a80;border-radius:4px;padding:7px;font:inherit;cursor:pointer}
 .delcat:hover{background:rgba(255,138,128,.12)}
-.store{margin-top:20px;padding:12px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:13px}
+.cats{margin-bottom:20px}
+.store{margin-top:auto;padding:12px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:13px}
 #storeMsg::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#6fd394;margin-right:8px}
 .sbtn{width:100%;margin-top:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.3);color:inherit;border-radius:4px;padding:7px;font:inherit;cursor:pointer}
 .sbtn:hover{background:rgba(255,255,255,.18)}
@@ -452,7 +453,7 @@ function renderDash(){
     const rec=quotes.slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"")).slice(0,5).map(x=>{const c=catObj(x.category)||{name:x.category};return `<button class="rec" style="--c:${catCol(x.category)}" data-c="${esc(x.category)}" data-s="${esc(x.subcategory||"")}"><span class="ri">${svgI(iconId(c))}</span><strong>${esc(x.supplier)}</strong><span class="a">${money(x.amount)}</span><small>${esc(x.category)}${x.subcategory?" / "+esc(x.subcategory):""}${x.project?" · "+esc(x.project):""}</small><small class="d">${esc(x.date)||""}</small></button>`}).join("");
     h+=`<div class="dgrid"><div class="dcard"><div class="dh"><h3>Offertes per categorie</h3><p>Verdeling van al je offertes</p></div>${bars}</div><div class="dcard"><div class="dh"><h3>Ontvangen per maand</h3><p>De laatste zes maanden</p></div><div class="plot"><div class="cols">${cols}</div></div><div class="mlab">${mlab}</div></div><div class="dcard wide"><div class="dh"><h3>Laatst ontvangen</h3><p>De vijf nieuwste offertes</p></div>${rec}</div></div>`;
   }
-  h+=`<div class="sech"><h3>Categorieën</h3></div>`;d.innerHTML=h}
+  h+=`<div class="sech"><h3>Offertes</h3></div>`;d.innerHTML=h}
 $("dash").onclick=e=>{const b=e.target.closest("button[data-c]");if(!b)return;cur=b.dataset.c;curSub=b.dataset.s||"";$("q").value="";openCats.clear();openCats.add(cur);render()};
 function render(){
   renderCats();
@@ -521,7 +522,7 @@ $("cats").addEventListener("drop",async e=>{const d=dropInfo(e);if(!d)return;e.p
   cats.splice(to,0,m);dragName=null;saveCats();render()});
 $("cats").addEventListener("dragend",()=>{dragName=null;clearDrop()});
 $("cats").onclick=e=>{const b=e.target.closest(".cat");if(b){const c=b.dataset.c,s=b.dataset.s||"";
-  if(c===PR){pricesOpen=!pricesOpen;render();return}
+  if(c===PR){pricesOpen=!pricesOpen;if(!pricesOpen)cats.forEach(x=>openCats.delete(x.name));render();return}
   const toggleClose=c!=="All"&&!s&&cur===c&&!curSub&&openCats.has(c);
   openCats.clear();if(c!=="All"&&!toggleClose)openCats.add(c);
   cur=c;curSub=s;$("q").value="";render()}};
