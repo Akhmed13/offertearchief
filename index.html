@@ -104,6 +104,8 @@ td.amt{font-weight:600;white-space:nowrap}
 .rec small.d{text-align:right}
 .dnote{color:var(--mute);font-size:14px;margin:0}
 .cats .navlbl{margin-top:16px}
+.grp{margin:2px 0 6px 12px;padding-left:6px;border-left:1px solid rgba(255,255,255,.14)}
+.cat[data-k=prices]::after{content:none}
 .rdot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--r);margin-right:7px;flex:none}
 .fbar{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
 .fchip{display:inline-flex;align-items:center;font:inherit;font-size:14px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:6px 14px;cursor:pointer}
@@ -201,11 +203,10 @@ label{display:block;font-size:13px;color:var(--mute);margin:12px 0 4px}
   <aside>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></span><h1 id="appTitle" title="Dubbelklik of klik met de rechtermuisknop om de titel te wijzigen" style="cursor:pointer">Offertearchief</h1></div>
     <div class="cats" id="cats"></div>
-    <form class="addcat" id="catForm"><input id="newCat" placeholder="Nieuwe categorie" aria-label="Nieuwe categorie"><button class="p" type="submit" aria-label="Categorie toevoegen" title="Categorie toevoegen">+</button></form>
     
     
     
-    <div class="store"><div id="storeMsg">Opslag in deze browser</div><button class="sbtn" id="pickDir">Kies opslagmap</button><button class="sbtn" id="useBrowser" hidden>Gebruik browseropslag</button></div>
+    <div class="store"><div id="storeMsg">Opslag in deze browser</div><button class="sbtn" id="pickDir">Kies opslagmap</button><button class="sbtn" id="pwBtn" hidden>Wachtwoord instellen</button><button class="sbtn" id="useBrowser" hidden>Gebruik browseropslag</button></div>
   <div class="ver">Versie 1.0</div>
   </aside>
   <main>
@@ -246,6 +247,13 @@ label{display:block;font-size:13px;color:var(--mute);margin:12px 0 4px}
 
 <dialog id="ico"><h3 id="iTitle" style="margin:0 0 14px;font:700 24px 'Barlow Condensed',sans-serif">Kies een pictogram</h3><div class="igrid" id="iGrid"></div><div class="btns"><button type="button" class="s" id="iNo">Annuleren</button></div></dialog>
 
+<dialog id="pwDlg"><h3 id="pwT" style="margin:0 0 6px;font:700 26px 'Barlow Condensed',sans-serif">Wachtwoord</h3>
+  <p class="dnote" id="pwM" style="margin:0 0 12px"></p>
+  <label id="pwL1">Wachtwoord</label><input id="pw1" type="password" autocomplete="off">
+  <label id="pwL2">Herhaal wachtwoord</label><input id="pw2" type="password" autocomplete="off">
+  <div class="msg" id="pwErr" role="alert"></div>
+  <div class="btns"><button type="button" class="s" id="pwNo">Annuleren</button><button type="button" class="s" id="pwSkip" hidden></button><button type="button" class="p" id="pwOk">OK</button></div></dialog>
+
 <dialog id="clDlg"><form id="clForm" novalidate>
     <h2 style="margin:0;font:700 26px 'Barlow Condensed',sans-serif" id="clTitle">Klant toevoegen</h2>
     <div class="row"><div><label>Naam / bedrijf</label><input id="clName" autocomplete="off"></div>
@@ -274,8 +282,8 @@ label{display:block;font-size:13px;color:var(--mute);margin:12px 0 4px}
 <script>
 const DEFAULT_CATS=["Dak","Buitenschrijnwerk","Gevel","Isolatie","Overige"];
 let sortKey="",sortDir=1,dlRec=null,dlBlob=null;
-const CL="@klanten",DEFAULT_CCATS=["Dakwerken","Buitenschrijnwerk","Gevel","Gevelbekleding"];
-let clOpen=new Set(),clientCats=[],clients=[],clientRating="",cRating="",editingClient=null,supIdx=-1;
+const PR="@prijzen",CL="@klanten",DEFAULT_CCATS=["Dakwerken","Buitenschrijnwerk","Gevel","Gevelbekleding"];
+let pricesOpen=true,clOpen=new Set(),clientCats=[],clients=[],clientRating="",cRating="",editingClient=null,supIdx=-1;
 const RATES={good:["Goed","hsl(145 58% 36%)"],avg:["Gemiddeld","hsl(32 92% 47%)"],bad:["Slecht","hsl(2 72% 50%)"]};
 function setSort(k){if(sortKey===k)sortDir=-sortDir;else{sortKey=k;sortDir=1}render()}
 [["thAmt","amount"],["thDate","date"]].forEach(([id,k])=>{const h=document.getElementById(id);h.onclick=()=>setSort(k);h.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setSort(k)}}});
@@ -309,10 +317,11 @@ async function writePdf(rec,blob){
 async function readPdf(path,root){let d=root||dir;const p=path.split("/");for(const s of p.slice(0,-1))d=await d.getDirectoryHandle(s);return (await d.getFileHandle(p[p.length-1])).getFile()}
 async function removePdf(path){let d=dir;const p=path.split("/");for(const s of p.slice(0,-1))d=await d.getDirectoryHandle(s);await d.removeEntry(p[p.length-1])}
 async function saveIndex(){const w=await(await dir.getFileHandle("quotation-index.json",{create:true})).createWritable();
-  await w.write(JSON.stringify({title:appName,cats,clientCats,clients,quotes:quotes.map(({blob,...r})=>r)},null,1));await w.close()}
+  await w.write(JSON.stringify({title:appName,cats,clientCats,clients,pw:pwData||undefined,quotes:quotes.map(({blob,...r})=>r)},null,1));await w.close()}
 async function useDir(h){
   const oldDir=dir,oldQuotes=quotes,oldCats=cats;dir=h;let idx=null;
   try{idx=JSON.parse(await(await(await h.getFileHandle("quotation-index.json")).getFile()).text())}catch(e){}
+  pwData=(idx&&idx.pw)||null;unlocked=false;
   if(idx&&idx.title)applyTitle(idx.title);
   if(idx&&Array.isArray(idx.clients)){clients=idx.clients;clientCats=Array.isArray(idx.clientCats)?idx.clientCats:clientCats}
   if(idx&&Array.isArray(idx.quotes)){cats=(idx.cats||[]).map(c=>typeof c==="string"?{name:c,subs:[]}:c);quotes=idx.quotes}
@@ -325,9 +334,9 @@ async function useDir(h){
   cur="All";curSub="";await metaOp("readwrite",s=>s.put(h,"dir"));updateStore();render();
 }
 function updateStore(){
-  $("storeMsg").textContent=dir?"Opslag in map: "+dir.name:(pending?"Map “"+pending.name+"” heeft je toestemming nodig":"Opslag in deze browser");
+  $("storeMsg").textContent=dir?"Opslag in map: "+dir.name+(pwData?(unlocked?" · ontgrendeld":" · vergrendeld"):""):(pending?"Map “"+pending.name+"” heeft je toestemming nodig":"Opslag in deze browser");
   $("pickDir").textContent=pending&&!dir?"Map opnieuw verbinden":(dir?"Map wijzigen":"Kies opslagmap");
-  $("useBrowser").hidden=!dir;
+  $("useBrowser").hidden=!dir;$("pwBtn").hidden=!dir;$("pwBtn").textContent=pwData?"Wachtwoord wijzigen":"Wachtwoord instellen";
 }
 
 function openDB(){return new Promise(res=>{try{const r=indexedDB.open("quotation-archive",2);
@@ -406,11 +415,13 @@ function renderCats(){
   let h=`<button class="cat${cur==="All"?" on":""}" data-c="All"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Home</span><span>${quotes.length}</span></button>`;
   h+=`<button class="cat${cur===CL&&!curSub?" on":""}" data-c="${CL}" data-k="root" aria-expanded="${openCats.has(CL)}"><span>${svgI("users")}Klanten</span><span>${clients.length}</span></button>`;
   if(openCats.has(CL))clientCats.forEach(k=>{h+=`<button class="cat sub${cur===CL&&curSub===k?" on":""}" data-c="${CL}" data-s="${esc(k)}" data-k="cat"><span>${esc(k)}</span><span>${clients.filter(x=>x.cat===k).length}</span></button>`});
-  h+='<div class="navlbl">Categorieën</div>';
-  cats.forEach(c=>{
+  h+=`<button class="cat${pricesOpen?" open":""}" data-c="${PR}" data-k="prices" aria-expanded="${pricesOpen}"><span>${svgI("tag")}Prijzen</span><span>${cats.length}</span></button>`;
+  if(pricesOpen)h+='<div class="grp">';
+  if(pricesOpen)cats.forEach(c=>{
     h+=`<button class="cat${cur===c.name&&!curSub?" on":""}" data-c="${esc(c.name)}" draggable="true" aria-expanded="${openCats.has(c.name)}"><span>${ico(c)}${esc(c.name)}</span><span>${quotes.filter(x=>x.category===c.name).length}</span></button>`;
     if(openCats.has(c.name))c.subs.forEach(s=>{h+=`<button class="cat sub${curSub===s?" on":""}" data-c="${esc(c.name)}" data-s="${esc(s)}"><span>${esc(s)}</span><span>${quotes.filter(x=>x.category===c.name&&x.subcategory===s).length}</span></button>`});
   });
+  if(pricesOpen)h+=cats.length?'</div>':'<div class="supe" style="padding:6px 14px;opacity:.6">Rechtsklik op “Prijzen” om een categorie toe te voegen.</div></div>';
   $("cats").innerHTML=h;
   $("fCat").innerHTML=cats.map(c=>`<option>${esc(c.name)}</option>`).join("");
   
@@ -496,24 +507,24 @@ function ask(msg,ok){return new Promise(res=>{const d=$("cfm");$("cMsg").textCon
 let dragName=null;
 function clearDrop(){document.querySelectorAll("#cats .drop-before,#cats .drop-after,#cats .dragging").forEach(e=>e.classList.remove("drop-before","drop-after","dragging"))}
 function dropInfo(e){const b=e.target.closest&&e.target.closest("#cats .cat");if(!b||!dragName)return null;
-  const c=b.dataset.c;if(c==="All"||c===CL||c===dragName)return null;
+  const c=b.dataset.c;if(c==="All"||c===CL||c===PR||c===dragName)return null;
   const r=b.getBoundingClientRect(),after=!!b.dataset.s||e.clientY>r.top+r.height/2;return{b,c,after}}
 $("cats").addEventListener("dragstart",e=>{const b=e.target.closest&&e.target.closest(".cat[draggable=true]");if(!b){e.preventDefault();return}
   dragName=b.dataset.c;b.classList.add("dragging");e.dataTransfer.effectAllowed="move";try{e.dataTransfer.setData("text/plain",dragName)}catch(err){}});
 $("cats").addEventListener("dragover",e=>{const d=dropInfo(e);if(!d)return;e.preventDefault();e.dataTransfer.dropEffect="move";
   document.querySelectorAll("#cats .drop-before,#cats .drop-after").forEach(x=>x.classList.remove("drop-before","drop-after"));
   d.b.classList.add(d.after?"drop-after":"drop-before")});
-$("cats").addEventListener("drop",e=>{const d=dropInfo(e);if(!d)return;e.preventDefault();
-  const from=cats.findIndex(c=>c.name===dragName);if(from<0){clearDrop();dragName=null;return}
+$("cats").addEventListener("drop",async e=>{const d=dropInfo(e);if(!d)return;e.preventDefault();const dn=dragName;
+  clearDrop();if(!await guard()){dragName=null;return}
+  const from=cats.findIndex(c=>c.name===dn);if(from<0){dragName=null;return}
   const [m]=cats.splice(from,1);let to=cats.findIndex(c=>c.name===d.c);if(to<0)to=cats.length;if(d.after)to++;
-  cats.splice(to,0,m);dragName=null;clearDrop();saveCats();render()});
+  cats.splice(to,0,m);dragName=null;saveCats();render()});
 $("cats").addEventListener("dragend",()=>{dragName=null;clearDrop()});
 $("cats").onclick=e=>{const b=e.target.closest(".cat");if(b){const c=b.dataset.c,s=b.dataset.s||"";
+  if(c===PR){pricesOpen=!pricesOpen;render();return}
   const toggleClose=c!=="All"&&!s&&cur===c&&!curSub&&openCats.has(c);
   openCats.clear();if(c!=="All"&&!toggleClose)openCats.add(c);
   cur=c;curSub=s;$("q").value="";render()}};
-$("catForm").onsubmit=e=>{e.preventDefault();const v=$("newCat").value.trim();
-  if(v&&!cats.some(c=>c.name.toLowerCase()===v.toLowerCase())){cats.push({name:v,subs:[]});saveCats();cur=v;curSub=""}$("newCat").value="";render()};
 
 async function deleteCurrent(){
   const c=catObj(cur);if(!c)return;
@@ -552,6 +563,9 @@ async function renameItem(cname,sname){
   }
   saveCats();render();
 }
+async function addMainCat(){const v=await renameDlg("","","Nieuwe categorie in Prijzen","Toevoegen");if(!v)return;
+  if(cats.some(c=>c.name.toLowerCase()===v.toLowerCase())){await ask("Die categorie bestaat al.");return}
+  cats.push({name:v,subs:[]});saveCats();pricesOpen=true;cur=v;curSub="";openCats.clear();$("q").value="";render()}
 async function addSub(cname){const c=catObj(cname);if(!c)return;
   const v=await renameDlg("","","Nieuwe subcategorie in “"+cname+"”","Toevoegen");
   if(!v)return;
@@ -562,10 +576,11 @@ let ctxT=null;
 function showCtx(e,c,s,k){e.preventDefault();k=k||"q";ctxT={c,s,k};const m=$("ctx"),n=s||c,q=k==="q";
   const g=x=>m.querySelector("[data-a="+x+"]");
   g("ren").textContent="“"+n+"” hernoemen";g("del").textContent="“"+n+"” verwijderen";
-  g("sub").textContent=k==="root"?"Categorie toevoegen":"Subcategorie toevoegen";
-  g("sub").hidden=k==="cat"||(q&&!!s);g("ico").hidden=!q||!!s;g("ren").hidden=k==="root";g("del").hidden=k==="root";
+  g("sub").textContent=(k==="root"||k==="prices")?"Categorie toevoegen":"Subcategorie toevoegen";
+  g("sub").hidden=k==="cat"||(q&&!!s);g("ico").hidden=!q||!!s;g("ren").hidden=k==="root"||k==="prices";g("del").hidden=k==="root"||k==="prices";
   m.hidden=false;m.style.left=Math.max(4,Math.min(e.clientX,innerWidth-m.offsetWidth-6))+"px";m.style.top=Math.max(4,Math.min(e.clientY,innerHeight-m.offsetHeight-6))+"px"}
-$("ctx").onclick=e=>{const b=e.target.closest("button");if(!b||!ctxT)return;const{c,s,k}=ctxT;$("ctx").hidden=true;
+$("ctx").onclick=async e=>{const b=e.target.closest("button");if(!b||!ctxT)return;const{c,s,k}=ctxT;$("ctx").hidden=true;if(!await guard())return;
+  if(k==="prices"){addMainCat();return}
   if(k==="root"){addClientCat();return}
   if(k==="cat"){if(b.dataset.a==="ren")renameClientCat(s);else deleteClientCat(s);return}
   if(b.dataset.a==="ico")pickIcon(c);
@@ -579,7 +594,7 @@ $("cats").oncontextmenu=e=>{const b=e.target.closest(".cat");if(!b||b.dataset.c=
 $("overview").oncontextmenu=e=>{const b=e.target.closest("button");if(!b)return;showCtx(e,b.dataset.c,b.dataset.s||"")};
 let appName="Offertearchief";
 function applyTitle(v){appName=v;$("appTitle").textContent=v;document.title=v}
-async function changeTitle(e){if(e)e.preventDefault();
+async function changeTitle(e){if(e)e.preventDefault();if(!await guard())return;
   const v=await renameDlg("title",appName,"Titel wijzigen","Opslaan");
   if(!v||v===appName)return;
   applyTitle(v);try{localStorage.setItem("qa-title",v)}catch(err){}
@@ -587,12 +602,43 @@ async function changeTitle(e){if(e)e.preventDefault();
 $("appTitle").ondblclick=changeTitle;$("appTitle").oncontextmenu=changeTitle;
 try{const t=localStorage.getItem("qa-title");if(t)applyTitle(t)}catch(e){}
 $("pickDir").onclick=async()=>{
+  if(dir&&!await guard())return;
   if(pending&&!dir){try{if((await pending.requestPermission({mode:"readwrite"}))==="granted"){const h=pending;pending=null;await useDir(h)}}catch(e){}updateStore();return}
   if(!window.showDirectoryPicker){await ask("Deze browser kan niet opslaan in een gekozen map. Gebruik Chrome of Edge op een computer.");return}
   let h;try{h=await window.showDirectoryPicker({mode:"readwrite"})}catch(e){if(e.name!=="AbortError")await ask("De browser blokkeert de toegang tot mappen op deze pagina. Open in plaats daarvan het gedownloade app-bestand op je computer in Chrome of Edge.");return}
   try{await useDir(h)}catch(e){dir=null;await ask("Die map kan niet gebruikt worden.")}
   updateStore();
+  if(dir&&!pwData)await setPassword(true);
 };
+
+/* ---------- Wachtwoord voor de opslagmap ---------- */
+let pwData=null,unlocked=false;
+const b64=b=>btoa(String.fromCharCode(...new Uint8Array(b))),unb64=x=>Uint8Array.from(atob(x),c=>c.charCodeAt(0));
+async function pwHash(pw,salt){const k=await crypto.subtle.importKey("raw",new TextEncoder().encode(pw),"PBKDF2",false,["deriveBits"]);return crypto.subtle.deriveBits({name:"PBKDF2",salt,iterations:150000,hash:"SHA-256"},k,256)}
+async function pwMake(pw){const salt=crypto.getRandomValues(new Uint8Array(16));return{s:b64(salt),h:b64(await pwHash(pw,salt))}}
+async function pwCheck(pw){return b64(await pwHash(pw,unb64(pwData.s)))===pwData.h}
+function pwDialog(o){return new Promise(res=>{const d=$("pwDlg"),i=[$("pw1"),$("pw2")];
+  $("pwT").textContent=o.title;$("pwM").textContent=o.msg||"";$("pwErr").textContent="";
+  $("pwL1").textContent=o.labels[0];$("pwL2").textContent=o.labels[1]||"";
+  $("pwL2").hidden=$("pw2").hidden=o.labels.length<2;i.forEach(x=>x.value="");
+  $("pwSkip").hidden=!o.skip;$("pwSkip").textContent=o.skip||"";
+  let busy=false;const done=v=>{d.close();res(v)};
+  const ok=async()=>{if(busy)return;busy=true;try{const v=i.map(x=>x.value),e=await o.validate(v);if(e){$("pwErr").textContent=e;busy=false;return}done(v)}catch(err){$("pwErr").textContent="Mislukt: "+(err&&err.message||err);busy=false}};
+  $("pwOk").onclick=ok;$("pwNo").onclick=()=>done(null);$("pwSkip").onclick=()=>done("skip");d.oncancel=()=>res(null);
+  d.onkeydown=e=>{if(e.key==="Enter"&&e.target.tagName==="INPUT"){e.preventDefault();ok()}};
+  d.showModal();i[0].focus()})}
+async function guard(){if(!dir||!pwData||unlocked)return true;
+  const v=await pwDialog({title:"Wachtwoord vereist",msg:"Deze opslagmap is beveiligd. Geef het wachtwoord in om aanpassingen te maken.",labels:["Wachtwoord"],validate:async v=>(await pwCheck(v[0]))?"":"Onjuist wachtwoord."});
+  if(v&&v!=="skip"){unlocked=true;updateStore();return true}return false}
+async function setPassword(first){
+  if(!(window.crypto&&crypto.subtle)){await ask("Wachtwoord instellen kan hier niet: deze browser ondersteunt het niet.");return}
+  const v=await pwDialog({title:first?"Wachtwoord instellen":"Wachtwoord wijzigen",
+    msg:first?"Stel een wachtwoord in. Voortaan moet je dit ingeven voordat je iets in deze map kunt aanpassen.":"Kies een nieuw wachtwoord voor deze map.",
+    labels:["Nieuw wachtwoord","Herhaal wachtwoord"],skip:first?"Zonder wachtwoord":"Wachtwoord verwijderen",
+    validate:async v=>!v[0]?"Geef een wachtwoord in.":v[0].length<4?"Minstens 4 tekens.":v[0]!==v[1]?"De wachtwoorden komen niet overeen.":""});
+  if(v===null)return;
+  pwData=v==="skip"?null:await pwMake(v[0]);unlocked=true;await saveIndex().catch(()=>{});updateStore()}
+$("pwBtn").onclick=async()=>{if(!await guard())return;await setPassword(!pwData)};
 
 /* ---------- Klanten ---------- */
 async function addClientCat(){const v=await renameDlg("","","Nieuwe categorie voor klanten","Toevoegen");if(!v)return;
@@ -626,6 +672,7 @@ function renderClients(){
   el.innerHTML=h}
 $("clients").onclick=async e=>{const t=e.target.closest("button");if(!t)return;
   if(t.classList.contains("fchip")){clientRating=t.dataset.r;render();return}
+  if((t.dataset.rate||t.dataset.cedit||t.dataset.cdel)&&!await guard())return;
   if(t.dataset.rate){const c=clients.find(x=>x.id===t.dataset.id);if(!c)return;c.rating=c.rating===t.dataset.rate?"":t.dataset.rate;saveClients();render();return}
   if(t.dataset.cg!==undefined){const k=t.dataset.cg;clOpen.has(k)?clOpen.delete(k):clOpen.add(k);render();return}
   if(t.dataset.ctag){$("q").value=t.dataset.ctag;render();return}
@@ -670,12 +717,12 @@ $("fSup").addEventListener("keydown",e=>{const l=$("supList"),it=[...l.querySele
   if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();const dn=e.key==="ArrowDown";supIdx=supIdx<0?(dn?0:it.length-1):(supIdx+(dn?1:-1)+it.length)%it.length;it.forEach((x,i)=>x.classList.toggle("act",i===supIdx))}
   else if(e.key==="Enter"&&supIdx>=0){e.preventDefault();e.stopPropagation();pickSup(it[supIdx].dataset.n)}});
 
-$("useBrowser").onclick=async()=>{dir=null;pending=null;await metaOp("readwrite",s=>s.delete("dir"));cats=loadCats();loadClients();quotes=await getAll();
+$("useBrowser").onclick=async()=>{if(!await guard())return;dir=null;pwData=null;unlocked=false;pending=null;await metaOp("readwrite",s=>s.delete("dir"));cats=loadCats();loadClients();quotes=await getAll();
   quotes.forEach(x=>{if(!catObj(x.category))cats.push({name:x.category,subs:[]})});cur="All";curSub="";updateStore();render()};
 $("fCat").onchange=()=>fillSubs("");
 $("overview").onclick=e=>{const b=e.target.closest("button");if(!b)return;cur=b.dataset.c;curSub=b.dataset.s||"";$("q").value="";openCats.clear();openCats.add(cur);render()};
 $("q").oninput=render;
-$("addBtn").onclick=async()=>{if(cur===CL){openClientForm();return}if(!cats.length){await ask("Voeg eerst een categorie toe.");return}openForm()};
+$("addBtn").onclick=async()=>{if(!await guard())return;if(cur===CL){openClientForm();return}if(!cats.length){await ask("Voeg eerst een categorie toe.");return}openForm()};
 $("cancel").onclick=()=>$("dlg").close();
 $("form").onsubmit=async e=>{
   e.preventDefault();
@@ -705,6 +752,7 @@ $("rows").onclick=async e=>{
   const t=e.target.closest("button");if(!t)return;
   if(t.dataset.tag){$("q").value=t.dataset.tag;render();return}
   const id=t.dataset.open||t.dataset.edit||t.dataset.del;const rec=quotes.find(x=>x.id===id);if(!rec)return;
+  if(!t.dataset.open&&!await guard())return;
   if(t.dataset.open){if(objUrl)URL.revokeObjectURL(objUrl);let bl;try{bl=rec.path&&dir?await readPdf(rec.path):rec.blob}catch(err){await ask("Dit bestand is niet gevonden in de map. Het is misschien verplaatst of verwijderd.");return}
     objUrl=URL.createObjectURL(bl);
     dlRec=rec;dlBlob=bl;$("vName").textContent=rec.supplier+" – "+rec.fileName;$("vFrame").src=objUrl;$("view").showModal()}
@@ -719,7 +767,7 @@ $("vDown").onclick=async()=>{if(!dlBlob||!dlRec)return;
 $("vClose").onclick=()=>{$("view").close();$("vFrame").src="about:blank"};
 
 /* Published pages block normal form submission, so buttons and Enter call the handlers directly */
-["catForm","form"].forEach(id=>{const f=$(id);f.setAttribute("novalidate","");
+["form"].forEach(id=>{const f=$(id);f.setAttribute("novalidate","");
   const go=()=>{$("msg").textContent="";Promise.resolve(f.onsubmit({preventDefault(){}})).catch(err=>{$("msg").textContent="Opslaan mislukt: "+(err&&err.message||err)})};
   const b=f.querySelector("button[type=submit]");if(b){b.type="button";b.onclick=go}
   f.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.tagName==="INPUT"){e.preventDefault();go()}})});
