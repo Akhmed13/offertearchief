@@ -306,7 +306,7 @@ label{display:block;font-size:13px;color:var(--mute);margin:12px 0 4px}
 <dialog id="cfm"><p id="cMsg" style="margin:0 0 4px;font-size:16px"></p><div class="btns"><button type="button" class="s" id="cNo">Annuleren</button><button type="button" class="p" id="cOk">OK</button></div></dialog>
 
 <dialog id="view" class="big">
-  <div style="display:flex;justify-content:space-between;align-items:center"><strong id="vName"></strong><span style="display:flex;gap:8px"><button type="button" class="p" id="vDown">Downloaden</button><button class="s" id="vClose">Sluiten</button></span></div>
+  <div style="display:flex;justify-content:space-between;align-items:center"><strong id="vName"></strong><span style="display:flex;gap:8px"><button class="s" id="vClose">Sluiten</button></span></div>
   <iframe id="vFrame" title="Voorbeeld van de pdf"></iframe>
 </dialog>
 
@@ -805,11 +805,6 @@ $("rows").onclick=async e=>{
   else if(t.dataset.edit)openForm(rec);
   else if(await ask("De offerte van "+rec.supplier+" verwijderen? De pdf wordt ook verwijderd.","Verwijderen")){if(dir){if(rec.path)await removePdf(rec.path).catch(()=>{});quotes=quotes.filter(x=>x.id!==id);await saveIndex()}else{await del(id);quotes=quotes.filter(x=>x.id!==id)}render()}
 };
-$("vDown").onclick=async()=>{if(!dlBlob||!dlRec)return;
-  let name=(dlRec.fileName||"offerte.pdf");if(!/\.pdf$/i.test(name))name+=".pdf";
-  let dl=null;try{if(window.claude&&claude.use)dl=await claude.use("downloads")}catch(e){}
-  if(dl){try{await dl.save({filename:name,data:dlBlob})}catch(e){if(e&&e.code&&e.code!=="declined")await ask("Downloaden is mislukt. Probeer het opnieuw.")}return}
-  const a=document.createElement("a");a.href=objUrl;a.download=name;document.body.appendChild(a);a.click();a.remove()};
 $("vClose").onclick=()=>{$("view").close();$("vFrame").src="about:blank"};
 
 /* Published pages block normal form submission, so buttons and Enter call the handlers directly */
