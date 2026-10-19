@@ -60,6 +60,8 @@ tr:last-child td{border-bottom:0}
 td.amt{font-weight:600;white-space:nowrap}
 .low{background:var(--goodbg);color:var(--good);border-radius:3px;padding:2px 6px;font-size:12px;margin-left:6px;font-weight:600}
 .note{color:var(--mute);font-size:13px}
+.tags{max-height:54px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent;padding-right:4px}
+.tags::-webkit-scrollbar{width:6px}.tags::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px}
 .tag{font:inherit;font-size:12px;background:var(--bg);color:var(--acc);border:1px solid var(--line);border-radius:10px;padding:1px 8px;margin:4px 4px 0 0;cursor:pointer}
 .tag:hover{border-color:var(--acc)}
 .welcome{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin:0 0 18px}
@@ -528,7 +530,7 @@ function render(){
   quotes.forEach(x=>{if(x.amount!==""&&x.amount!=null&&(lowest[gk(x)]==null||x.amount<lowest[gk(x)]))lowest[gk(x)]=x.amount});
   const showCat=cur==="All"||!!term;
   $("rows").innerHTML=list.map(x=>`<tr>
-   <td><strong>${rateDot((clientByName(x.supplier)||{}).rating)}${esc(x.supplier)}</strong>${(showCat||(!curSub&&x.subcategory))?`<div class="note">${esc(x.category)}${x.subcategory?" / "+esc(x.subcategory):""}</div>`:""}${x.notes?`<div class="note">${esc(x.notes)}</div>`:""}${(x.tags||[]).length?`<div>${x.tags.map(t=>`<button class="tag" data-tag="${esc(t)}">${esc(t)}</button>`).join("")}</div>`:""}</td>
+   <td><strong>${rateDot((clientByName(x.supplier)||{}).rating)}${esc(x.supplier)}</strong>${(showCat||(!curSub&&x.subcategory))?`<div class="note">${esc(x.category)}${x.subcategory?" / "+esc(x.subcategory):""}</div>`:""}${x.notes?`<div class="note">${esc(x.notes)}</div>`:""}${(x.tags||[]).length?`<div class="tags">${x.tags.map(t=>`<button class="tag" data-tag="${esc(t)}">${esc(t)}</button>`).join("")}</div>`:""}</td>
    <td>${esc(x.project)||"–"}</td>
    <td class="amt">${money(x.amount)}${x.amount!==""&&x.amount===lowest[gk(x)]&&quotes.filter(y=>gk(y)===gk(x)&&y.amount!=="").length>1?'<span class="low">Laagste</span>':""}</td>
    <td>${esc(x.date)||"–"}</td>
@@ -708,7 +710,7 @@ function renderClients(){
   const row=(ic,t)=>t?`<div class="crow">${svgI(ic)}<span>${t}</span></div>`:"";
   const card=c=>{const n=quotes.filter(x=>(x.supplier||"").trim().toLowerCase()===c.name.trim().toLowerCase()).length,r=c.rating&&RATES[c.rating]?c.rating:"";
     const rb=["good","avg","bad"].map(k=>`<button type="button" class="rbtn${r===k?" on":""}" style="--r:${RATES[k][1]}" data-rate="${k}" data-id="${c.id}" title="${RATES[k][0]}" aria-label="Beoordeling: ${RATES[k][0].toLowerCase()}" aria-pressed="${r===k}"></button>`).join("");
-    return `<div class="cc" style="--r:${r?RATES[r][1]:"var(--line)"}"><div class="cch"><span class="cci">${esc((c.name.trim().charAt(0)||"?").toUpperCase())}</span><div class="cct"><strong>${esc(c.name)}</strong><small>${esc(c.cat)||"Zonder categorie"}${r?" · "+RATES[r][0]:""}</small></div><div class="rbtns">${rb}</div></div>${row("user",esc(c.person))}${row("mail",c.email?`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`:"")}${row("pin",c.address?`<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.address)}" target="_blank" rel="noopener">${esc(c.address)}</a>`:"")}${row("phone",c.phone?`<a href="tel:${esc(c.phone)}">${esc(c.phone)}</a>`:"")}${(c.tags||[]).length?`<div>${c.tags.map(t=>`<button type="button" class="tag" data-ctag="${esc(t)}">${esc(t)}</button>`).join("")}</div>`:""}${c.notes?`<p class="cnote">${esc(c.notes)}</p>`:""}<div class="ccf"><span class="note">${n===1?"1 offerte":n+" offertes"}</span><span><button class="s" data-cedit="${c.id}">Bewerken</button> <button class="s del" data-cdel="${c.id}">Verwijderen</button></span></div></div>`};
+    return `<div class="cc" style="--r:${r?RATES[r][1]:"var(--line)"}"><div class="cch"><span class="cci">${esc((c.name.trim().charAt(0)||"?").toUpperCase())}</span><div class="cct"><strong>${esc(c.name)}</strong><small>${esc(c.cat)||"Zonder categorie"}${r?" · "+RATES[r][0]:""}</small></div><div class="rbtns">${rb}</div></div>${row("user",esc(c.person))}${row("mail",c.email?`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`:"")}${row("pin",c.address?`<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.address)}" target="_blank" rel="noopener">${esc(c.address)}</a>`:"")}${row("phone",c.phone?`<a href="tel:${esc(c.phone)}">${esc(c.phone)}</a>`:"")}${(c.tags||[]).length?`<div class="tags">${c.tags.map(t=>`<button type="button" class="tag" data-ctag="${esc(t)}">${esc(t)}</button>`).join("")}</div>`:""}${c.notes?`<p class="cnote">${esc(c.notes)}</p>`:""}<div class="ccf"><span class="note">${n===1?"1 offerte":n+" offertes"}</span><span><button class="s" data-cedit="${c.id}">Bewerken</button> <button class="s del" data-cdel="${c.id}">Verwijderen</button></span></div></div>`};
   if(!clients.length)h+='<div class="dcard"><p class="dnote">Nog geen klanten. Voeg de eerste toe met “Klant toevoegen”. Je kunt categorieën toevoegen, hernoemen en verwijderen met de rechtermuisknop op “Klanten” in de zijbalk.</p></div>';
   else if(!list.length)h+='<div class="dcard"><p class="dnote">Geen klanten gevonden.</p></div>';
   else if(!curSub&&!term){
