@@ -93,6 +93,26 @@ td.dt,td.act{white-space:nowrap}
 .wtypes{display:flex;gap:8px;flex-wrap:wrap}
 .wtypes button{font:inherit;font-size:14px;background:var(--panel);color:var(--ink);border:2px solid var(--line);border-radius:999px;padding:6px 14px;cursor:pointer}
 .wtypes button.sel{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,transparent);font-weight:600}
+.wrad{display:flex;gap:8px;flex-wrap:wrap}
+.wrad button{font:inherit;font-size:14px;background:var(--panel);color:var(--ink);border:2px solid var(--line);border-radius:999px;padding:6px 14px;cursor:pointer}
+.wrad button.sel{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,transparent);font-weight:600}
+.wsearch{align-self:flex-start;margin-top:12px;padding:11px 22px;font-size:15px}
+.wsearch[disabled]{opacity:.6;cursor:progress}
+.wres{max-width:760px;margin-top:18px;display:flex;flex-direction:column;gap:10px}
+.wres h3{margin:0;font:700 22px/1.15 'Barlow Condensed',Arial Narrow,sans-serif}
+.wr{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;grid-template-columns:34px 1fr auto;gap:2px 14px;align-items:start}
+.wr .rk{grid-row:1/4;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,transparent)}
+.wr strong{font-size:16px;overflow-wrap:anywhere}
+.wr .sub{color:var(--mute);font-size:13px}
+.wr .ln{font-size:14px;overflow-wrap:anywhere}
+.wr .ln a{color:var(--acc);text-decoration:none}.wr .ln a:hover{text-decoration:underline}
+.wr .wb{grid-column:3;grid-row:1/4;display:flex;flex-direction:column;gap:6px;align-items:stretch}
+.wr .wb button,.wr .wb a{padding:6px 12px;font-size:13px;text-align:center;text-decoration:none;display:block}
+.wr .wb a{border:1px solid var(--acc);color:var(--acc);border-radius:6px;background:var(--panel);font-weight:600}
+.wr .wb button[disabled]{opacity:.5}
+.wr .km{display:inline-block;margin-left:8px;font-size:12px;font-weight:600;color:var(--mute);background:var(--bg);border-radius:999px;padding:1px 8px}
+.wsrc{color:var(--mute);font-size:12px;margin:0}
+@media(max-width:640px){.wr{grid-template-columns:34px 1fr}.wr .wb{grid-column:1/-1;grid-row:auto;flex-direction:row;flex-wrap:wrap}}
 .wq{margin:12px 0 4px;padding:10px 12px;border-radius:8px;background:var(--bg);border:1px dashed var(--line);font-size:14px;color:var(--mute);overflow-wrap:anywhere}
 .wq b{color:var(--ink);font-weight:600}
 .wgo{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
@@ -514,25 +534,111 @@ function updateWeb(){
   set("wM","https://www.google.com/maps/search/"+e(q.maps));
   set("wB","https://www.bing.com/search?q="+e(q.web));
   set("wD","https://duckduckgo.com/?q="+e(q.web))}
+const OSM_RULES=[
+ [/dak|zink|goot|roof/,{craft:["roofer","sheet_metal_worker"]}],
+ [/schrijn|raam|ramen|deur|kozijn|timmer|hout/,{craft:["carpenter","joiner","window_construction"]}],
+ [/gevel|pleister|crepi|voeg/,{craft:["plasterer","bricklayer","builder"]}],
+ [/isol/,{craft:["insulation"]}],
+ [/metsel|baksteen/,{craft:["bricklayer"]}],
+ [/elektr/,{craft:["electrician"]}],
+ [/sanitair|loodgiet/,{craft:["plumber"]}],
+ [/verwarm|hvac|airco|klimaat|ventilat/,{craft:["hvac"]}],
+ [/schilder/,{craft:["painter"]}],
+ [/tegel/,{craft:["tiler"]}],
+ [/vloer|chape|parket/,{craft:["floorer"]}],
+ [/tuin|aanleg|bestrat|groen|buitenaanleg/,{craft:["gardener"]}],
+ [/beton|ruwbouw|bouw|aannem|renovat/,{craft:["builder"],office:["construction_company"]}],
+ [/las|staal|metaal/,{craft:["welder","metal_construction"]}],
+ [/glas|beglaz/,{craft:["glaziery"]}],
+ [/steen/,{craft:["stonemason"]}],
+ [/materiaal|materialen|groothandel/,{shop:["trade","doityourself","hardware"]}]];
+const OSM_LABEL={roofer:"Dakwerker",sheet_metal_worker:"Zinkwerker",carpenter:"Timmerman/schrijnwerker",joiner:"Schrijnwerker",window_construction:"Ramen en deuren",plasterer:"Pleisterwerken",bricklayer:"Metselaar",builder:"Bouwbedrijf",electrician:"Elektricien",plumber:"Loodgieter",hvac:"Verwarming en klimaat",painter:"Schilder",tiler:"Tegelzetter",floorer:"Vloeren",gardener:"Tuinaanleg",welder:"Lasser",metal_construction:"Metaalbouw",glaziery:"Glaszetter",stonemason:"Steenhouwer",insulation:"Isolatie",construction_company:"Bouwbedrijf",trade:"Handel/groothandel",doityourself:"Doe-het-zelf",hardware:"IJzerhandel"};
+let wRadius=25,wBusy=false,wRes=null;
+const reEsc=x=>x.replace(/[.*+?^${}()|[\]\\"]/g,"\\$&");
+async function fetchJson(url,opt,ms){const ac=new AbortController(),t=setTimeout(()=>ac.abort(),ms||30000);try{const r=await fetch(url,Object.assign({signal:ac.signal},opt||{}));if(!r.ok)throw new Error("HTTP "+r.status);return await r.json()}finally{clearTimeout(t)}}
+async function overpass(q){let last;for(const u of ["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter"]){try{return await fetchJson(u,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:"data="+encodeURIComponent(q)},35000)}catch(e){last=e}}throw last}
+function hav(a,b,c,d){const R=6371,r=x=>x*Math.PI/180,dl=r(c-a),dn=r(d-b),x=Math.sin(dl/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
+function osmPlan(){
+  const kws=wWork.split(",").map(x=>x.trim().toLowerCase()).filter(Boolean),craft=new Set(),shop=new Set(),office=new Set(),stems=new Set();
+  kws.forEach(k=>{OSM_RULES.forEach(([re,t])=>{if(re.test(k)){(t.craft||[]).forEach(x=>craft.add(x));(t.shop||[]).forEach(x=>shop.add(x));(t.office||[]).forEach(x=>office.add(x))}});
+    stems.add(k);const st=k.replace(/(werken|werk|bedrijf)$/,"");if(st.length>=3)stems.add(st)});
+  if(wTypes.has("Aannemer")){craft.add("builder");office.add("construction_company")}
+  if(wTypes.has("Leverancier")){["trade","doityourself","hardware"].forEach(x=>shop.add(x))}
+  return{kws,craft,shop,office,stems:[...stems]}}
+async function doOsmSearch(){
+  if(wBusy)return;const plan=osmPlan(),box=$("wRes"),btn=$("wSearch");
+  if(!wRegion.trim()){box.innerHTML='<p class="msg">Geef eerst een regio in.</p>';return}
+  if(!plan.kws.length&&!wTypes.size){box.innerHTML='<p class="msg">Geef minstens één soort werk in.</p>';return}
+  wBusy=true;btn.disabled=true;btn.textContent="Bezig met zoeken…";box.innerHTML='<p class="dnote">Regio opzoeken en bedrijven ophalen. Dit kan een halve minuut duren.</p>';
+  try{
+    const g=await fetchJson("https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=nl&q="+encodeURIComponent(wRegion.trim()),null,15000);
+    if(!g.length){box.innerHTML='<p class="msg">Die regio werd niet gevonden. Probeer een gemeente of postcode, bv. “2000 Antwerpen”.</p>';return}
+    const lat=+g[0].lat,lon=+g[0].lon,R=wRadius*1000,ar=`(around:${R},${lat},${lon})`,L=[];
+    if(plan.craft.size)L.push(`nwr["craft"~"^(${[...plan.craft].join("|")})$"]${ar};`);
+    if(plan.shop.size)L.push(`nwr["shop"~"^(${[...plan.shop].join("|")})$"]${ar};`);
+    if(plan.office.size)L.push(`nwr["office"~"^(${[...plan.office].join("|")})$"]${ar};`);
+    plan.stems.forEach(st=>L.push(`nwr["name"~"${reEsc(st)}",i]${ar};`));
+    if(!L.length){box.innerHTML='<p class="msg">Geef een soort werk in.</p>';return}
+    const data=await overpass(`[out:json][timeout:30];(${L.join("")});out center tags 300;`);
+    const seen=new Set(),out=[];
+    for(const e of data.elements||[]){const t=e.tags||{};if(!t.name)continue;const k=e.type+e.id;if(seen.has(k))continue;seen.add(k);
+      const la=e.lat??(e.center&&e.center.lat),lo=e.lon??(e.center&&e.center.lon);if(la==null)continue;
+      const km=hav(lat,lon,la,lo),nm=t.name.toLowerCase();let sc=0;
+      const types=[t.craft,t.shop,t.office].filter(Boolean).flatMap(v=>v.split(";"));
+      if(types.some(v=>plan.craft.has(v)||plan.shop.has(v)||plan.office.has(v)))sc+=4;
+      if(plan.stems.some(st=>nm.includes(st)))sc+=2.5;
+      if(t.description&&plan.stems.some(st=>t.description.toLowerCase().includes(st)))sc+=1;
+      sc+=(t.phone||t["contact:phone"]?.5:0)+(t.website||t["contact:website"]?.5:0)+(t.email||t["contact:email"]?.3:0);
+      sc-=km/wRadius*1.5;
+      const street=[t["addr:street"],t["addr:housenumber"]].filter(Boolean).join(" "),city=[t["addr:postcode"],t["addr:city"]].filter(Boolean).join(" ");
+      out.push({name:t.name,sc,km,lat:la,lon:lo,labels:[...new Set(types.map(v=>OSM_LABEL[v]).filter(Boolean))],address:[street,city].filter(Boolean).join(", "),
+        phone:t.phone||t["contact:phone"]||"",email:t.email||t["contact:email"]||"",web:t.website||t["contact:website"]||""})}
+    out.sort((a,b)=>b.sc-a.sc);wRes={n:out.length,list:out.slice(0,30),region:g[0].display_name,radius:wRadius,works:plan.kws.join(", ")};
+    showOsm();
+  }catch(err){
+    box.innerHTML='<p class="msg">Ophalen mislukt'+(err&&err.name==="AbortError"?" (te lang gewacht)":"")+'. De gepubliceerde pagina mag mogelijk geen gegevens van buiten ophalen, of de dienst is druk. Probeer opnieuw, of gebruik de zoekmachine-knoppen hieronder.</p>';
+  }finally{wBusy=false;btn.disabled=false;btn.textContent="Zoek bedrijven"}}
+function showOsm(){
+  const box=$("wRes");if(!wRes){box.innerHTML="";return}
+  if(!wRes.list.length){box.innerHTML='<p class="dnote">Geen bedrijven gevonden in de kaartgegevens binnen '+wRes.radius+' km. De kaartgegevens zijn onvolledig: vergroot de straal of gebruik de zoekmachine-knoppen hieronder.</p>';return}
+  const e=encodeURIComponent;
+  box.innerHTML=`<h3>${wRes.list.length} beste resultaten</h3><p class="wsrc">Gevonden in kaartgegevens van OpenStreetMap, binnen ${wRes.radius} km van ${esc(wRes.region)}. Gesorteerd op hoe goed ze passen bij je zoekopdracht. De gegevens zijn onvolledig en kunnen verouderd zijn: controleer altijd zelf.</p>`+
+  wRes.list.map((r,i)=>{const known=!!clientByName(r.name),web=/^https?:/i.test(r.web)?r.web:(r.web?"https://"+r.web:"");
+    return `<div class="wr"><span class="rk">${i+1}</span><div><strong>${esc(r.name)}</strong><span class="km">${r.km<1?"<1":Math.round(r.km)} km</span></div>
+    <div class="wb"><button type="button" class="p" data-add="${i}"${known?" disabled":""}>${known?"Al in klanten":"Toevoegen aan klanten"}</button><a class="s" target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps/search/?api=1&query=${e(r.name+" "+(r.address||""))}">Op de kaart</a></div>
+    <div class="sub">${esc(r.labels.join(" · ")||"Bedrijf")}</div>
+    <div class="ln">${[r.address?esc(r.address):"",r.phone?`<a href="tel:${esc(r.phone)}">${esc(r.phone)}</a>`:"",r.email?`<a href="mailto:${esc(r.email)}">${esc(r.email)}</a>`:"",web?`<a href="${esc(web)}" target="_blank" rel="noopener noreferrer">website</a>`:""].filter(Boolean).join(" · ")||'<span class="sub">Geen contactgegevens in de kaartgegevens</span>'}</div></div>`}).join("")}
+async function addFromOsm(i){const r=wRes&&wRes.list[i];if(!r||!await guard())return;
+  openClientForm();$("clName").value=r.name;$("clPhone").value=r.phone;$("clMail").value=r.email;$("clAddr").value=r.address;
+  $("clNote").value="Gevonden via OpenStreetMap"+(r.web?" · "+r.web:"");$("clTags").value=wRes.works;
+  const kws=wRes.works.split(",").map(x=>x.trim()).filter(Boolean),k=clientCats.find(c=>kws.some(w=>nameMatch(c,w)||w.includes(c.toLowerCase())||c.toLowerCase().includes(w)));
+  if(k)$("clCat").value=k}
 function renderWeb(){
   const el=$("web");
   if(!el.firstChild){
     el.innerHTML=`<div class="wform"><h3>Aannemers en leveranciers zoeken</h3>
-    <p class="dnote">Zoekt alleen op het internet, niet in je eigen archief. De resultaten openen in een nieuw tabblad.</p>
+    <p class="dnote">Zoekt alleen op het internet (kaartgegevens van OpenStreetMap), niet in je eigen archief.</p>
     <label for="wWork">Welke werken voeren ze uit? (gescheiden door komma's)</label><input id="wWork" autocomplete="off" placeholder="bv. dakwerken, zinken dakgoten, platte daken">
     <label for="wRegion">In welke regio?</label><input id="wRegion" autocomplete="off" placeholder="bv. Antwerpen, 2000 Antwerpen of Limburg">
     <label>Soort bedrijf (optioneel)</label><div class="wtypes" id="wTypes">${W_TYPES.map(t=>`<button type="button" data-t="${t}">${t}</button>`).join("")}</div>
+    <label>Straal rond de regio</label><div class="wrad" id="wRad">${[10,25,50,100].map(k=>`<button type="button" data-r="${k}">${k} km</button>`).join("")}</div>
+    <button type="button" class="p wsearch" id="wSearch">Zoek bedrijven</button>
     <div class="wq" id="wShow"></div>
+    <p class="dnote" style="margin:8px 0 0">Liever in een zoekmachine zoeken? Open dezelfde zoekopdracht hier:</p>
     <div class="wgo"><a id="wG" target="_blank" rel="noopener noreferrer">Google</a><a id="wM" class="alt" target="_blank" rel="noopener noreferrer">Google Maps</a><a id="wB" class="alt" target="_blank" rel="noopener noreferrer">Bing</a><a id="wD" class="alt" target="_blank" rel="noopener noreferrer">DuckDuckGo</a><button type="button" class="s" id="wCopy">Kopieer zoekopdracht</button></div>
-    <div class="msg" id="wMsg" role="status"></div></div>`;
+    <div class="msg" id="wMsg" role="status"></div></div><div class="wres" id="wRes"></div>`;
     $("wWork").oninput=e=>{wWork=e.target.value;updateWeb()};
     $("wRegion").oninput=e=>{wRegion=e.target.value;updateWeb()};
     $("wTypes").onclick=e=>{const b=e.target.closest("button");if(!b)return;const t=b.dataset.t;wTypes.has(t)?wTypes.delete(t):wTypes.add(t);b.classList.toggle("sel",wTypes.has(t));updateWeb()};
+    $("wRad").onclick=e=>{const b=e.target.closest("button");if(!b)return;wRadius=+b.dataset.r;[...$("wRad").children].forEach(x=>x.classList.toggle("sel",+x.dataset.r===wRadius))};
+    $("wSearch").onclick=doOsmSearch;
+    $("wRes").onclick=e=>{const b=e.target.closest("button[data-add]");if(b)addFromOsm(+b.dataset.add)};
     $("wCopy").onclick=async()=>{const q=webQueries();if(!q.ok)return;let ok=false;try{await navigator.clipboard.writeText(q.web);ok=true}catch(err){}$("wMsg").textContent=ok?"Zoekopdracht gekopieerd.":"Kopiëren lukt hier niet. Selecteer de tekst hierboven en kopieer die zelf."};
-    el.onkeydown=e=>{if(e.key==="Enter"&&e.target.tagName==="INPUT"){e.preventDefault();const a=$("wG");if(a.getAttribute("aria-disabled")!=="true")a.click()}};
+    el.onkeydown=e=>{if(e.key==="Enter"&&e.target.tagName==="INPUT"){e.preventDefault();doOsmSearch()}};
   }
   $("wWork").value=wWork;$("wRegion").value=wRegion;
   [...$("wTypes").children].forEach(b=>b.classList.toggle("sel",wTypes.has(b.dataset.t)));
+  [...$("wRad").children].forEach(b=>b.classList.toggle("sel",+b.dataset.r===wRadius));showOsm();
   updateWeb()}
 $("webBtn").onclick=()=>{pricesOpen=false;openCats.clear();cur=WB;curSub="";$("q").value="";render()};
 function by4(t){const w=String(t||"").trim().split(/\s+/).filter(Boolean),r=[];for(let i=0;i<w.length;i+=4)r.push(esc(w.slice(i,i+4).join(" ")));return r.join("<br>")}
