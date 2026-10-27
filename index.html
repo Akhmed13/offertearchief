@@ -52,6 +52,8 @@ aside h1{font:700 21px/1.1 'Barlow Condensed',Arial Narrow,sans-serif;margin:0;l
 .pjh span{color:var(--mute);font-size:13px;white-space:nowrap}.pjh span em{font-style:normal;color:var(--ink);font-weight:700}
 .pjd{padding:0 16px 14px}
 .pjd .pjm{min-width:0}
+.pjm tr.pjt td{background:linear-gradient(90deg,var(--acc) 0%,color-mix(in srgb,var(--acc) 55%,var(--panel)) 35%,color-mix(in srgb,var(--acc) 6%,var(--panel)) 100%);color:var(--accink);padding-top:9px;padding-bottom:9px;border-bottom:0}
+.pjm tr.pjt strong{font:700 15px 'Barlow Condensed',Arial Narrow,sans-serif;letter-spacing:.4px;text-transform:uppercase}
 .pjd .btns{margin-top:12px;justify-content:flex-start}
 body.dropping main{outline:3px dashed var(--acc);outline-offset:-10px}
 #aiMsg{margin:6px 0 0;min-height:0}#aiMsg:empty{display:none}
@@ -890,7 +892,7 @@ function renderProjects(){const el=$("projects"),term=$("q").value.trim().toLowe
   h+='<div class="sech"><h3>Alle projecten</h3></div>';
   gs.forEach(g=>{const ls=projLines(g),t=projTot(ls),op=!!term||pjOpen.has(g.k);
     h+=`<div class="pjc"><button type="button" class="pjh" data-pj="${esc(g.k)}" aria-expanded="${op}"><svg class="chv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg><b>${esc(g.name)}</b><span>${g.qs.length===1?"1 offerte":g.qs.length+" offertes"}</span><span>Laagste totaal <em>${money(t.lo)}</em></span></button>`;
-    if(op)h+='<div class="pjd"><table class="pjm"><thead><tr><th>Onderdeel / leverancier</th><th>Bedrag</th><th>Ontvangen</th></tr></thead><tbody>'+ls.map(l=>`<tr><td colspan="3"><strong>${lineName(l)}</strong></td></tr>`+l.qs.map(q=>`<tr class="sub"><td>${esc(q.supplier)}</td><td class="amt${l.low&&q===l.low&&l.qs.filter(y=>y.amount!==""&&y.amount!=null).length>1?" best":""}">${money(q.amount)}</td><td class="amt">${esc(q.date)||"–"}</td></tr>`).join("")).join("")+
+    if(op)h+='<div class="pjd"><table class="pjm"><thead><tr><th>Onderdeel / leverancier</th><th>Bedrag</th><th>Ontvangen</th></tr></thead><tbody>'+ls.map(l=>`<tr class="pjt"><td colspan="3"><strong>${lineName(l)}</strong></td></tr>`+l.qs.map(q=>`<tr class="sub"><td>${esc(q.supplier)}</td><td class="amt${l.low&&q===l.low&&l.qs.filter(y=>y.amount!==""&&y.amount!=null).length>1?" best":""}">${money(q.amount)}</td><td class="amt">${esc(q.date)||"–"}</td></tr>`).join("")).join("")+
       `</tbody><tfoot><tr><th>Laagste totaal / hoogste totaal</th><td class="amt" colspan="2">${money(t.lo)} / ${money(t.hi)}</td></tr></tfoot></table>${g.k?`<div class="btns"><button type="button" class="s" data-pjshow="${esc(g.k)}">Toon offertes in de lijst</button></div>`:""}</div>`;
     h+="</div>"});
   el.innerHTML=h}
