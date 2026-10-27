@@ -30,6 +30,7 @@ aside h1{font:700 21px/1.1 'Barlow Condensed',Arial Narrow,sans-serif;margin:0;l
 .cat svg{width:16px;height:16px;margin-right:9px;vertical-align:-3px;opacity:.85}
 .cat.sub{margin-left:18px;width:calc(100% - 18px);padding-left:14px;border-radius:0 8px 8px 0;border-left:2px solid rgba(255,255,255,.14);font-size:14px}
 .cat.sub.on{border-left-color:#fff}
+.cat.sub2{margin-left:34px;width:calc(100% - 34px);font-size:13.5px}
 .delcat{margin-top:10px;width:100%;background:none;border:1px solid #ff8a80;color:#ff8a80;border-radius:4px;padding:7px;font:inherit;cursor:pointer}
 .delcat:hover{background:rgba(255,138,128,.12)}
 .cats{margin-bottom:20px}
@@ -51,6 +52,24 @@ aside h1{font:700 21px/1.1 'Barlow Condensed',Arial Narrow,sans-serif;margin:0;l
 main{padding:22px 26px;min-width:0}
 .top{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
 .top h2{font:700 32px/1 'Barlow Condensed',Arial Narrow,sans-serif;margin:0 auto 0 0}
+.csel{position:relative}
+.csel-btn{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:8px 10px;text-align:left;cursor:pointer;transition:border-color .12s,box-shadow .12s}
+.csel-btn:hover{border-color:color-mix(in srgb,var(--acc) 50%,var(--line))}
+.csel-btn:focus-visible,.csel-btn[aria-expanded=true]{outline:0;border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 18%,transparent)}
+.csel-v{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.csel-v.ph{color:var(--mute)}
+.csel-btn .chv{flex:none;width:16px;height:16px;color:var(--mute);transition:transform .15s}
+.csel-btn[aria-expanded=true] .chv{transform:rotate(180deg);color:var(--acc)}
+.csel-pan{position:fixed;z-index:2000;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.25);padding:6px;max-height:268px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent;animation:cselin .12s ease-out}
+@keyframes cselin{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.csel-opt{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:15px}
+.csel-opt .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.csel-opt .m{flex:none;font-size:12px;font-weight:600;color:var(--mute);background:var(--bg);border-radius:999px;padding:1px 9px}
+.csel-opt .ck{flex:none;width:16px;height:16px;color:var(--acc);opacity:0}
+.csel-opt.act{background:var(--bg)}
+.csel-opt.sel{color:var(--acc);font-weight:600;background:color-mix(in srgb,var(--acc) 10%,transparent)}
+.csel-opt.sel .ck{opacity:1}
+.csel-opt.mute .n{color:var(--mute)}
 input,select,textarea{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:8px 10px;width:100%}
 .top input{width:220px}
 button.p,button.s{font:inherit;font-weight:600;border-radius:4px;padding:8px 14px;cursor:pointer;border:1px solid var(--acc)}
@@ -304,6 +323,7 @@ label{display:block;font-size:13px;color:var(--mute);margin:12px 0 4px}
     <h2 style="margin:0;font:700 26px 'Barlow Condensed',sans-serif" id="clTitle">Klant toevoegen</h2>
     <div class="row"><div><label>Naam / bedrijf</label><input id="clName" autocomplete="off"></div>
     <div><label>Categorie</label><select id="clCat"></select></div></div>
+    <div id="clSubWrap" hidden><label>Subcategorie</label><select id="clSub"></select></div>
     <div class="row"><div><label>Contactpersoon</label><input id="clPerson" autocomplete="off"></div>
     <div><label>Telefoon</label><input id="clPhone" type="tel" autocomplete="off"></div></div>
     <label>E-mail</label><input id="clMail" type="email" autocomplete="off">
@@ -329,7 +349,7 @@ label{display:block;font-size:13px;color:var(--mute);margin:12px 0 4px}
 const DEFAULT_CATS=["Dak","Buitenschrijnwerk","Gevel","Isolatie","Overige"];
 let sortKey="",sortDir=1,dlRec=null,dlBlob=null;
 const PR="@prijzen",CL="@klanten",DEFAULT_CCATS=["Dakwerken","Buitenschrijnwerk","Gevel","Gevelbekleding"];
-let pricesOpen=false,clOpen=new Set(),clientCats=[],clients=[],clientRating="",cRating="",editingClient=null,supIdx=-1;
+let pricesOpen=false,clOpen=new Set(),clientCats=[],clientSubs={},curCSub="",clients=[],clientRating="",cRating="",editingClient=null,supIdx=-1;
 const RATES={good:["Goed","hsl(145 58% 36%)"],avg:["Gemiddeld","hsl(32 92% 47%)"],bad:["Slecht","hsl(2 72% 50%)"]};
 function setSort(k){if(sortKey===k)sortDir=-sortDir;else{sortKey=k;sortDir=1}render()}
 [["thAmt","amount"],["thDate","date"]].forEach(([id,k])=>{const h=document.getElementById(id);h.onclick=()=>setSort(k);h.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setSort(k)}}});
@@ -343,9 +363,9 @@ function loadCats(){let v=null;try{v=JSON.parse(localStorage.getItem("qa-cats"))
   return v.map(c=>typeof c==="string"?{name:c,subs:[],icon:""}:{name:c.name,subs:c.subs||[],icon:c.icon||"",hue:c.hue})}
 function catObj(n){return cats.find(c=>c.name===n)}
 function loadClients(){let v=null;try{v=JSON.parse(localStorage.getItem("qa-clients"))}catch(e){}
-  if(v&&Array.isArray(v.list)){clientCats=Array.isArray(v.cats)?v.cats.slice():[];clients=v.list}
-  else{clientCats=DEFAULT_CCATS.slice();clients=[]}}
-function saveClients(){if(dir){saveIndex().catch(()=>{});return}try{localStorage.setItem("qa-clients",JSON.stringify({cats:clientCats,list:clients}))}catch(e){}}
+  if(v&&Array.isArray(v.list)){clientCats=Array.isArray(v.cats)?v.cats.slice():[];clients=v.list;clientSubs=v.subs&&typeof v.subs==="object"?v.subs:{}}
+  else{clientCats=DEFAULT_CCATS.slice();clients=[];clientSubs={}}}
+function saveClients(){if(dir){saveIndex().catch(()=>{});return}try{localStorage.setItem("qa-clients",JSON.stringify({cats:clientCats,subs:clientSubs,list:clients}))}catch(e){}}
 function clientByName(n){n=(n||"").trim().toLowerCase();return n?clients.find(c=>c.name.trim().toLowerCase()===n):null}
 function rateDot(r){return r&&RATES[r]?`<i class="rdot" style="--r:${RATES[r][1]}" title="${RATES[r][0]}"></i>`:""}
 function saveCats(){if(dir){saveIndex().catch(()=>{});return}try{localStorage.setItem("qa-cats",JSON.stringify(cats))}catch(e){}}
@@ -363,13 +383,13 @@ async function writePdf(rec,blob){
 async function readPdf(path,root){let d=root||dir;const p=path.split("/");for(const s of p.slice(0,-1))d=await d.getDirectoryHandle(s);return (await d.getFileHandle(p[p.length-1])).getFile()}
 async function removePdf(path){let d=dir;const p=path.split("/");for(const s of p.slice(0,-1))d=await d.getDirectoryHandle(s);await d.removeEntry(p[p.length-1])}
 async function saveIndex(){const w=await(await dir.getFileHandle("quotation-index.json",{create:true})).createWritable();
-  await w.write(JSON.stringify({title:appName,cats,clientCats,clients,pw:pwData||undefined,quotes:quotes.map(({blob,...r})=>r)},null,1));await w.close()}
+  await w.write(JSON.stringify({title:appName,cats,clientCats,clientSubs,clients,pw:pwData||undefined,quotes:quotes.map(({blob,...r})=>r)},null,1));await w.close()}
 async function useDir(h){
   const oldDir=dir,oldQuotes=quotes,oldCats=cats;dir=h;let idx=null;
   try{idx=JSON.parse(await(await(await h.getFileHandle("quotation-index.json")).getFile()).text())}catch(e){}
   pwData=(idx&&idx.pw)||null;unlocked=false;
   if(idx&&idx.title)applyTitle(idx.title);
-  if(idx&&Array.isArray(idx.clients)){clients=idx.clients;clientCats=Array.isArray(idx.clientCats)?idx.clientCats:clientCats}
+  if(idx&&Array.isArray(idx.clients)){clients=idx.clients;clientCats=Array.isArray(idx.clientCats)?idx.clientCats:clientCats;clientSubs=idx.clientSubs&&typeof idx.clientSubs==="object"?idx.clientSubs:{}}
   if(idx&&Array.isArray(idx.quotes)){cats=(idx.cats||[]).map(c=>typeof c==="string"?{name:c,subs:[]}:c);quotes=idx.quotes}
   else{
     const copy=oldQuotes.length&&await ask("Deze map bevat nog geen archief. De "+oldQuotes.length+" opgeslagen offerte(s) naar deze map kopiëren?","Kopiëren");
@@ -461,7 +481,8 @@ function catCol(n){const c=catObj(n);if(!c)return "hsl(205 58% 52%)";if(c.hue==n
 function renderCats(){
   let h=`<button class="cat${cur==="All"?" on":""}" data-c="All"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Home</span><span>${quotes.length}</span></button>`;
   h+=`<button class="cat${cur===CL&&!curSub?" on":""}" data-c="${CL}" data-k="root" aria-expanded="${openCats.has(CL)}"><span>${svgI("users")}Klanten</span><span>${clients.length}</span></button>`;
-  if(openCats.has(CL))clientCats.forEach(k=>{h+=`<button class="cat sub${cur===CL&&curSub===k?" on":""}" data-c="${CL}" data-s="${esc(k)}" data-k="cat"><span>${esc(k)}</span><span>${clients.filter(x=>x.cat===k).length}</span></button>`});
+  if(openCats.has(CL))clientCats.forEach(k=>{h+=`<button class="cat sub${cur===CL&&curSub===k?" on":""}" data-c="${CL}" data-s="${esc(k)}" data-k="cat"><span>${esc(k)}</span><span>${clients.filter(x=>x.cat===k).length}</span></button>`;
+    if(cur===CL&&curSub===k)(clientSubs[k]||[]).forEach(u=>{h+=`<button class="cat sub sub2${curCSub===u?" on":""}" data-c="${CL}" data-s="${esc(k)}" data-u="${esc(u)}" data-k="csub"><span>${esc(u)}</span><span>${clients.filter(x=>x.cat===k&&x.sub===u).length}</span></button>`})});
   h+=`<button class="cat${cur===PR?" on":""}" data-c="${PR}" data-k="prices" aria-expanded="${pricesOpen}"><span>${svgI("tag")}Prijzen</span><span>${cats.length}</span></button>`;
   if(pricesOpen)h+='<div class="grp">';
   if(pricesOpen)cats.forEach(c=>{
@@ -516,7 +537,7 @@ function renderDash(){
 $("dash").onclick=e=>{
   const a=e.target.closest("button[data-act]");if(a){if(a.dataset.act==="quote")$("addBtn").click();else(async()=>{if(await guard())openClientForm()})();return}
   const g=e.target.closest("button[data-go]");if(g){$("q").value="";openCats.clear();
-    if(g.dataset.go==="prices"){pricesOpen=true;cur=PR;curSub=""}else{pricesOpen=false;cur=CL;curSub=g.dataset.s||"";clientRating="";openCats.add(CL)}render();return}
+    if(g.dataset.go==="prices"){pricesOpen=true;cur=PR;curSub=""}else{pricesOpen=false;cur=CL;curSub=g.dataset.s||"";curCSub="";clientRating="";openCats.add(CL)}render();return}
   const b=e.target.closest("button[data-c]");if(!b)return;pricesOpen=true;cur=b.dataset.c;curSub=b.dataset.s||"";$("q").value="";openCats.clear();openCats.add(cur);render()};
 function render(){
   renderCats();
@@ -588,7 +609,7 @@ $("cats").onclick=e=>{const b=e.target.closest(".cat");if(b){const c=b.dataset.c
   const toggleClose=c!=="All"&&!s&&cur===c&&!curSub&&openCats.has(c);
   openCats.clear();if(c!=="All"&&!toggleClose)openCats.add(c);
   if(c==="All"||(c===CL&&!s))pricesOpen=false;
-  cur=c;curSub=s;$("q").value="";render()}};
+  cur=c;curSub=s;curCSub=b.dataset.u||"";$("q").value="";render()}};
 
 async function deleteCurrent(){
   const c=catObj(cur);if(!c)return;
@@ -637,16 +658,17 @@ async function addSub(cname){const c=catObj(cname);if(!c)return;
   c.subs.push(v);saveCats();cur=cname;curSub=v;openCats.clear();openCats.add(cname);$("q").value="";render()}
 
 let ctxT=null;
-function showCtx(e,c,s,k){e.preventDefault();k=k||"q";ctxT={c,s,k};const m=$("ctx"),n=s||c,q=k==="q";
+function showCtx(e,c,s,k,u){e.preventDefault();k=k||"q";ctxT={c,s,k,u};const m=$("ctx"),n=u||s||c,q=k==="q";
   const g=x=>m.querySelector("[data-a="+x+"]");
   g("ren").textContent="“"+n+"” hernoemen";g("del").textContent="“"+n+"” verwijderen";
   g("sub").textContent=(k==="root"||k==="prices")?"Categorie toevoegen":"Subcategorie toevoegen";
-  g("sub").hidden=k==="cat"||(q&&!!s);g("ico").hidden=!q||!!s;g("ren").hidden=k==="root"||k==="prices";g("del").hidden=k==="root"||k==="prices";
+  g("sub").hidden=k==="csub"||(q&&!!s);g("ico").hidden=!q||!!s;g("ren").hidden=k==="root"||k==="prices";g("del").hidden=k==="root"||k==="prices";
   m.hidden=false;m.style.left=Math.max(4,Math.min(e.clientX,innerWidth-m.offsetWidth-6))+"px";m.style.top=Math.max(4,Math.min(e.clientY,innerHeight-m.offsetHeight-6))+"px"}
-$("ctx").onclick=async e=>{const b=e.target.closest("button");if(!b||!ctxT)return;const{c,s,k}=ctxT;$("ctx").hidden=true;if(!await guard())return;
+$("ctx").onclick=async e=>{const b=e.target.closest("button");if(!b||!ctxT)return;const{c,s,k,u}=ctxT;$("ctx").hidden=true;if(!await guard())return;
   if(k==="prices"){addMainCat();return}
   if(k==="root"){addClientCat();return}
-  if(k==="cat"){if(b.dataset.a==="ren")renameClientCat(s);else deleteClientCat(s);return}
+  if(k==="cat"){if(b.dataset.a==="sub")addClientSub(s);else if(b.dataset.a==="ren")renameClientCat(s);else deleteClientCat(s);return}
+  if(k==="csub"){if(b.dataset.a==="ren")renameClientSub(s,u);else deleteClientSub(s,u);return}
   if(b.dataset.a==="ico")pickIcon(c);
   else if(b.dataset.a==="sub")addSub(c);
   else if(b.dataset.a==="ren")renameItem(c,s);
@@ -654,7 +676,7 @@ $("ctx").onclick=async e=>{const b=e.target.closest("button");if(!b||!ctxT)retur
 document.addEventListener("click",e=>{if(!e.target.closest("#ctx"))$("ctx").hidden=true});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")$("ctx").hidden=true});
 window.addEventListener("scroll",()=>{$("ctx").hidden=true},true);
-$("cats").oncontextmenu=e=>{const b=e.target.closest(".cat");if(!b||b.dataset.c==="All")return;showCtx(e,b.dataset.c,b.dataset.s||"",b.dataset.k||"q")};
+$("cats").oncontextmenu=e=>{const b=e.target.closest(".cat");if(!b||b.dataset.c==="All")return;showCtx(e,b.dataset.c,b.dataset.s||"",b.dataset.k||"q",b.dataset.u||"")};
 $("overview").oncontextmenu=e=>{const b=e.target.closest("button");if(!b)return;showCtx(e,b.dataset.c,b.dataset.s||"")};
 let appName="Offertearchief";
 function applyTitle(v){appName=v;$("appTitle").textContent=v;document.title=v}
@@ -707,26 +729,37 @@ $("pwBtn").onclick=async()=>{if(!await guard())return;await setPassword(!pwData)
 /* ---------- Klanten ---------- */
 async function addClientCat(){const v=await renameDlg("","","Nieuwe categorie voor klanten","Toevoegen");if(!v)return;
   if(clientCats.some(k=>k.toLowerCase()===v.toLowerCase())){await ask("Die categorie bestaat al.");return}
-  clientCats.push(v);saveClients();cur=CL;curSub=v;openCats.clear();openCats.add(CL);$("q").value="";render()}
+  clientCats.push(v);saveClients();cur=CL;curSub=v;curCSub="";openCats.clear();openCats.add(CL);$("q").value="";render()}
 async function renameClientCat(k){const v=await renameDlg("",k,"Categorie hernoemen");if(!v||v===k)return;
   if(clientCats.some(x=>x!==k&&x.toLowerCase()===v.toLowerCase())){await ask("Die categorie bestaat al.");return}
-  clientCats=clientCats.map(x=>x===k?v:x);clients.forEach(c=>{if(c.cat===k)c.cat=v});if(cur===CL&&curSub===k)curSub=v;saveClients();render()}
+  clientCats=clientCats.map(x=>x===k?v:x);if(clientSubs[k]){clientSubs[v]=clientSubs[k];delete clientSubs[k]}clients.forEach(c=>{if(c.cat===k)c.cat=v});if(cur===CL&&curSub===k)curSub=v;saveClients();render()}
 async function deleteClientCat(k){const n=clients.filter(c=>c.cat===k).length;
   if(!await ask("Categorie \""+k+"\" verwijderen?"+(n?" De "+n+" klant(en) blijven bestaan, zonder categorie.":""),"Verwijderen"))return;
-  clientCats=clientCats.filter(x=>x!==k);clients.forEach(c=>{if(c.cat===k)c.cat=""});if(cur===CL&&curSub===k)curSub="";saveClients();render()}
+  clientCats=clientCats.filter(x=>x!==k);delete clientSubs[k];clients.forEach(c=>{if(c.cat===k){c.cat="";c.sub=""}});if(cur===CL&&curSub===k){curSub="";curCSub=""}saveClients();render()}
+async function addClientSub(k){const v=await renameDlg("","","Nieuwe subcategorie in “"+k+"”","Toevoegen");if(!v)return;
+  const l=clientSubs[k]||(clientSubs[k]=[]);
+  if(l.some(x=>x.toLowerCase()===v.toLowerCase())){await ask("Die subcategorie bestaat al.");return}
+  l.push(v);saveClients();cur=CL;curSub=k;curCSub=v;openCats.clear();openCats.add(CL);$("q").value="";render()}
+async function renameClientSub(k,u){const v=await renameDlg("",u,"Subcategorie hernoemen");if(!v||v===u)return;
+  const l=clientSubs[k]||[];if(l.some(x=>x!==u&&x.toLowerCase()===v.toLowerCase())){await ask("Die subcategorie bestaat al.");return}
+  clientSubs[k]=l.map(x=>x===u?v:x);clients.forEach(c=>{if(c.cat===k&&c.sub===u)c.sub=v});if(curCSub===u)curCSub=v;saveClients();render()}
+async function deleteClientSub(k,u){const n=clients.filter(c=>c.cat===k&&c.sub===u).length;
+  if(!await ask("Subcategorie \""+u+"\" verwijderen?"+(n?" De "+n+" klant(en) blijven bestaan, in \""+k+"\" zonder subcategorie.":""),"Verwijderen"))return;
+  clientSubs[k]=(clientSubs[k]||[]).filter(x=>x!==u);clients.forEach(c=>{if(c.cat===k&&c.sub===u)c.sub=""});if(curCSub===u)curCSub="";saveClients();render()}
 
 function renderClients(){
   const el=$("clients"),term=$("q").value.trim().toLowerCase();
-  $("title").textContent=term?"Zoekresultaten in klanten":"Klanten"+(curSub?" / "+curSub:"");
-  const base=c=>term||!curSub||c.cat===curSub;
-  const list=clients.filter(c=>base(c)&&(!clientRating||c.rating===clientRating)&&(!term||hit([c.name,c.person,c.email,c.phone,c.address,c.notes,c.cat,(c.tags||[]).join(" ")].join(" "),term))).sort((a,b)=>a.name.localeCompare(b.name,"nl"));
-  const cnt=r=>clients.filter(c=>base(c)&&(r===""||c.rating===r)&&(!term||hit([c.name,c.person,c.email,c.phone,c.address,c.notes,c.cat,(c.tags||[]).join(" ")].join(" "),term))).length;
+  const cs=curSub&&(clientSubs[curSub]||[]).includes(curCSub)?curCSub:"";
+  $("title").textContent=term?"Zoekresultaten in klanten":"Klanten"+(curSub?" / "+curSub:"")+(cs?" / "+cs:"");
+  const base=c=>term||!curSub||(c.cat===curSub&&(!cs||c.sub===cs));
+  const list=clients.filter(c=>base(c)&&(!clientRating||c.rating===clientRating)&&(!term||hit([c.name,c.person,c.email,c.phone,c.address,c.notes,c.cat,c.sub,(c.tags||[]).join(" ")].join(" "),term))).sort((a,b)=>a.name.localeCompare(b.name,"nl"));
+  const cnt=r=>clients.filter(c=>base(c)&&(r===""||c.rating===r)&&(!term||hit([c.name,c.person,c.email,c.phone,c.address,c.notes,c.cat,c.sub,(c.tags||[]).join(" ")].join(" "),term))).length;
   const chip=(r,l)=>`<button class="fchip${clientRating===r?" on":""}" data-r="${r}">${r?`<i class="rdot" style="--r:${RATES[r][1]}"></i>`:""}${l}<span>${cnt(r)}</span></button>`;
   let h=`<div class="fbar">${chip("","Alle")}${chip("good","Goed")}${chip("avg","Gemiddeld")}${chip("bad","Slecht")}</div>`;
   const row=(ic,t)=>t?`<div class="crow">${svgI(ic)}<span>${t}</span></div>`:"";
   const card=c=>{const n=quotes.filter(x=>(x.supplier||"").trim().toLowerCase()===c.name.trim().toLowerCase()).length,r=c.rating&&RATES[c.rating]?c.rating:"";
     const rb=["good","avg","bad"].map(k=>`<button type="button" class="rbtn${r===k?" on":""}" style="--r:${RATES[k][1]}" data-rate="${k}" data-id="${c.id}" title="${RATES[k][0]}" aria-label="Beoordeling: ${RATES[k][0].toLowerCase()}" aria-pressed="${r===k}"></button>`).join("");
-    return `<div class="cc" style="--r:${r?RATES[r][1]:"var(--line)"}"><div class="cch"><span class="cci">${esc((c.name.trim().charAt(0)||"?").toUpperCase())}</span><div class="cct"><strong>${esc(c.name)}</strong><small>${esc(c.cat)||"Zonder categorie"}${r?" · "+RATES[r][0]:""}</small></div><div class="rbtns">${rb}</div></div>${row("user",esc(c.person))}${row("mail",c.email?`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`:"")}${row("pin",c.address?`<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.address)}" target="_blank" rel="noopener">${esc(c.address)}</a>`:"")}${row("phone",c.phone?`<a href="tel:${esc(c.phone)}">${esc(c.phone)}</a>`:"")}${(c.tags||[]).length?`<div class="tags">${tagRows(c.tags,"data-ctag")}</div>`:""}${c.notes?`<p class="cnote clip" tabindex="0">${by4(c.notes)}</p>`:""}<div class="ccf"><span class="note">${n===1?"1 offerte":n+" offertes"}</span><span><button class="s" data-cedit="${c.id}">Bewerken</button> <button class="s del" data-cdel="${c.id}">Verwijderen</button></span></div></div>`};
+    return `<div class="cc" style="--r:${r?RATES[r][1]:"var(--line)"}"><div class="cch"><span class="cci">${esc((c.name.trim().charAt(0)||"?").toUpperCase())}</span><div class="cct"><strong>${esc(c.name)}</strong><small>${esc(c.cat)||"Zonder categorie"}${c.sub?" / "+esc(c.sub):""}${r?" · "+RATES[r][0]:""}</small></div><div class="rbtns">${rb}</div></div>${row("user",esc(c.person))}${row("mail",c.email?`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`:"")}${row("pin",c.address?`<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.address)}" target="_blank" rel="noopener">${esc(c.address)}</a>`:"")}${row("phone",c.phone?`<a href="tel:${esc(c.phone)}">${esc(c.phone)}</a>`:"")}${(c.tags||[]).length?`<div class="tags">${tagRows(c.tags,"data-ctag")}</div>`:""}${c.notes?`<p class="cnote clip" tabindex="0">${by4(c.notes)}</p>`:""}<div class="ccf"><span class="note">${n===1?"1 offerte":n+" offertes"}</span><span><button class="s" data-cedit="${c.id}">Bewerken</button> <button class="s del" data-cdel="${c.id}">Verwijderen</button></span></div></div>`};
   if(!clients.length)h+='<div class="dcard"><p class="dnote">Nog geen klanten. Voeg de eerste toe met “Klant toevoegen”. Je kunt categorieën toevoegen, hernoemen en verwijderen met de rechtermuisknop op “Klanten” in de zijbalk.</p></div>';
   else if(!list.length)h+='<div class="dcard"><p class="dnote">Geen klanten gevonden.</p></div>';
   else if(!curSub&&!term){
@@ -743,20 +776,65 @@ $("clients").onclick=async e=>{const t=e.target.closest("button");if(!t)return;
   if(t.dataset.cedit){openClientForm(clients.find(x=>x.id===t.dataset.cedit));return}
   if(t.dataset.cdel){const c=clients.find(x=>x.id===t.dataset.cdel);if(c&&await ask("Klant \""+c.name+"\" verwijderen? Bestaande offertes blijven staan.","Verwijderen")){clients=clients.filter(x=>x!==c);saveClients();render()}}};
 function setCRate(v){cRating=v;document.querySelectorAll("#clRate .rb").forEach(b=>b.classList.toggle("sel",b.dataset.v===v))}
+function makeSelect(sel){
+  if(!sel||sel.dataset.cs)return;sel.dataset.cs="1";
+  const wrap=document.createElement("div");wrap.className="csel";
+  const btn=document.createElement("button");btn.type="button";btn.className="csel-btn";btn.setAttribute("aria-haspopup","listbox");btn.setAttribute("aria-expanded","false");
+  const lab=document.createElement("span");lab.className="csel-v";
+  btn.append(lab);btn.insertAdjacentHTML("beforeend",'<svg class="chv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>');
+  sel.parentNode.insertBefore(wrap,sel);wrap.append(btn,sel);sel.hidden=true;sel.tabIndex=-1;
+  const desc=Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,"value");let pan=null,idx=-1;
+  const sync=()=>{const o=sel.selectedOptions[0];lab.textContent=o?o.textContent:"";lab.classList.toggle("ph",!!o&&o.value==="")};
+  Object.defineProperty(sel,"value",{get(){return desc.get.call(this)},set(v){desc.set.call(this,v);sync()},configurable:true});
+  new MutationObserver(sync).observe(sel,{childList:true,subtree:true,characterData:true});
+  if(sel.form)sel.form.addEventListener("reset",()=>setTimeout(sync));sync();
+  const CK='<svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>';
+  function close(){if(!pan)return;pan.remove();pan=null;btn.setAttribute("aria-expanded","false");document.removeEventListener("mousedown",outside,true);window.removeEventListener("scroll",onScroll,true);window.removeEventListener("resize",close)}
+  function outside(e){if(pan&&!pan.contains(e.target)&&!btn.contains(e.target))close()}
+  function onScroll(e){if(pan&&!pan.contains(e.target))close()}
+  function mark(i,scroll){idx=i;[...pan.children].forEach((c,k)=>c.classList.toggle("act",k===i));if(scroll&&pan.children[i])pan.children[i].scrollIntoView({block:"nearest"})}
+  function pick(i){if(i<0||i>=sel.options.length)return;sel.selectedIndex=i;sel.dispatchEvent(new Event("change",{bubbles:true}));sync();close();btn.focus()}
+  function open(){if(pan||btn.disabled)return;
+    pan=document.createElement("div");pan.className="csel-pan";pan.setAttribute("role","listbox");
+    pan.innerHTML=[...sel.options].map((o,i)=>`<div class="csel-opt${i===sel.selectedIndex?" sel":""}${o.value===""?" mute":""}" role="option" aria-selected="${i===sel.selectedIndex}" data-i="${i}"><span class="n">${esc(o.textContent)}</span>${o.dataset.m!=null&&o.dataset.m!==""?`<span class="m">${esc(o.dataset.m)}</span>`:""}${CK}</div>`).join("");
+    (sel.closest("dialog")||document.body).appendChild(pan);
+    const r=btn.getBoundingClientRect(),h=Math.min(268,pan.scrollHeight+14),below=innerHeight-r.bottom-8,up=below<h&&r.top>below;
+    pan.style.left=r.left+"px";pan.style.width=r.width+"px";pan.style.top=(up?Math.max(8,r.top-h-4):r.bottom+4)+"px";if(up)pan.style.maxHeight=Math.min(268,r.top-12)+"px";else pan.style.maxHeight=Math.min(268,below)+"px";
+    btn.setAttribute("aria-expanded","true");mark(sel.selectedIndex,true);
+    pan.onmousedown=e=>e.preventDefault();
+    pan.onclick=e=>{const o=e.target.closest(".csel-opt");if(o)pick(+o.dataset.i)};
+    pan.onmousemove=e=>{const o=e.target.closest(".csel-opt");if(o&&+o.dataset.i!==idx)mark(+o.dataset.i)};
+    document.addEventListener("mousedown",outside,true);window.addEventListener("scroll",onScroll,true);window.addEventListener("resize",close)}
+  btn.onclick=()=>pan?close():open();
+  btn.addEventListener("keydown",e=>{const n=sel.options.length;
+    if(!pan){if(["ArrowDown","ArrowUp","Enter"," "].includes(e.key)){e.preventDefault();open()}return}
+    if(e.key==="Escape"){e.preventDefault();e.stopPropagation();close()}
+    else if(e.key==="ArrowDown"){e.preventDefault();mark((idx+1)%n,true)}
+    else if(e.key==="ArrowUp"){e.preventDefault();mark((idx-1+n)%n,true)}
+    else if(e.key==="Enter"||e.key===" "){e.preventDefault();pick(idx)}
+    else if(e.key==="Tab")close()});
+  btn.addEventListener("blur",()=>setTimeout(()=>{if(pan&&document.activeElement!==btn)close()},120));
+  const lbl=sel.closest("div")&&sel.closest("div").querySelector("label");if(lbl&&!lbl.htmlFor){}
+}
+function fillCSub(v){const subs=clientSubs[$("clCat").value]||[],k=$("clCat").value;
+  $("clSub").innerHTML='<option value="">Zonder subcategorie</option>'+subs.map(u=>`<option data-m="${clients.filter(c=>c.cat===k&&c.sub===u).length}">${esc(u)}</option>`).join("");
+  $("clSub").value=subs.includes(v)?v:"";$("clSubWrap").hidden=!subs.length}
 function openClientForm(rec){editingClient=rec||null;$("clForm").reset();$("clMsg").textContent="";
   $("clTitle").textContent=rec?"Klant bewerken":"Klant toevoegen";
-  $("clCat").innerHTML='<option value="">Zonder categorie</option>'+clientCats.map(k=>`<option>${esc(k)}</option>`).join("");
+  $("clCat").innerHTML='<option value="">Zonder categorie</option>'+clientCats.map(k=>`<option data-m="${clients.filter(c=>c.cat===k).length}">${esc(k)}</option>`).join("");
   $("clCat").value=rec?rec.cat:(cur===CL?curSub:"");
+  fillCSub(rec?rec.sub:(cur===CL?curCSub:""));
   if(rec){$("clName").value=rec.name;$("clPerson").value=rec.person||"";$("clPhone").value=rec.phone||"";$("clMail").value=rec.email||"";$("clAddr").value=rec.address||"";$("clNote").value=rec.notes||"";$("clTags").value=(rec.tags||[]).join(", ")}
   setCRate(rec&&rec.rating||"");$("clDlg").showModal()}
 async function saveClient(){const name=$("clName").value.trim();
   if(!name){$("clMsg").textContent="Geef de naam van de klant in.";return}
   if(clients.some(c=>c!==editingClient&&normN(c.name)===normN(name))){$("clMsg").textContent="Er bestaat al een klant met deze naam (hoofdletters, spaties en leestekens tellen niet mee).";return}
   const rec=editingClient||{id:Date.now().toString(36)+Math.random().toString(36).slice(2,6)},old=editingClient?editingClient.name:"";
-  Object.assign(rec,{name,cat:$("clCat").value,person:$("clPerson").value.trim(),phone:$("clPhone").value.trim(),email:$("clMail").value.trim(),address:$("clAddr").value.trim(),notes:$("clNote").value.trim(),tags:$("clTags").value.split(",").map(t=>t.trim()).filter(Boolean),rating:cRating});
+  Object.assign(rec,{name,cat:$("clCat").value,sub:(clientSubs[$("clCat").value]||[]).includes($("clSub").value)?$("clSub").value:"",person:$("clPerson").value.trim(),phone:$("clPhone").value.trim(),email:$("clMail").value.trim(),address:$("clAddr").value.trim(),notes:$("clNote").value.trim(),tags:$("clTags").value.split(",").map(t=>t.trim()).filter(Boolean),rating:cRating});
   if(!editingClient)clients.push(rec);
   if(old&&old.trim().toLowerCase()!==name.toLowerCase()){for(const q of quotes)if((q.supplier||"").trim().toLowerCase()===old.trim().toLowerCase()){q.supplier=name;if(!dir)await put(q).catch(()=>{})}}
-  saveClients();$("clDlg").close();$("q").value="";cur=CL;curSub=rec.cat||"";clientRating="";openCats.clear();openCats.add(CL);render()}
+  saveClients();$("clDlg").close();$("q").value="";cur=CL;curSub=rec.cat||"";curCSub=rec.sub||"";clientRating="";openCats.clear();openCats.add(CL);render()}
+$("clCat").addEventListener("change",()=>fillCSub(""));
 $("clCancel").onclick=()=>$("clDlg").close();$("clSave").onclick=saveClient;
 $("clRate").onclick=e=>{const b=e.target.closest(".rb");if(b)setCRate(b.dataset.v)};
 $("clForm").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.tagName==="INPUT"){e.preventDefault();saveClient()}});
@@ -766,7 +844,7 @@ function hit(t,term){const w=term.split(",").map(x=>x.trim()).filter(Boolean);t=
 function normN(x){return (x||"").toLowerCase().replace(/[^a-z0-9]/g,"")}
 function nameMatch(a,b){a=normN(a);b=normN(b);if(!a||!b)return false;if(a===b)return true;const[sh,lo]=a.length<=b.length?[a,b]:[b,a];return sh.length>=3&&lo.startsWith(sh)}
 function clientPool(){const sub=$("fSub").value,cat=$("fCat").value;
-  for(const n of [sub,cat]){if(!n)continue;const ks=clientCats.filter(k=>nameMatch(k,n));if(ks.length)return{list:clients.filter(c=>ks.includes(c.cat)),label:ks.join(", ")}}
+  for(const n of [sub,cat]){if(!n)continue;const ks=clientCats.filter(k=>nameMatch(k,n)),sm=clients.filter(c=>c.sub&&nameMatch(c.sub,n));if(ks.length||sm.length)return{list:clients.filter(c=>ks.includes(c.cat)||sm.includes(c)),label:ks.length?ks.join(", "):n}}
   return{list:clients,label:""}}
 function showSup(){const l=$("supList"),t=$("fSup").value.trim().toLowerCase();supIdx=-1;const pool=clientPool();
   const m=pool.list.filter(c=>!t||c.name.toLowerCase().includes(t)||(c.cat||"").toLowerCase().includes(t)||(c.person||"").toLowerCase().includes(t)).sort((a,b)=>a.name.localeCompare(b.name,"nl")).slice(0,8);
@@ -833,6 +911,7 @@ $("view").addEventListener("click",e=>{const r=$("view").getBoundingClientRect()
   const b=f.querySelector("button[type=submit]");if(b){b.type="button";b.onclick=go}
   f.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.tagName==="INPUT"){e.preventDefault();go()}})});
 
+["fCat","fSub","clCat","clSub"].forEach(i=>makeSelect($(i)));
 (async()=>{cats=loadCats();loadClients();db=await openDB();quotes=await getAll();
   quotes.forEach(x=>{let c=catObj(x.category);if(!c){c={name:x.category,subs:[]};cats.push(c)}if(x.subcategory&&!c.subs.includes(x.subcategory))c.subs.push(x.subcategory)});
   try{const h=db?await metaOp("readonly",s=>s.get("dir")):null;
