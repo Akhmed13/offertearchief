@@ -349,7 +349,7 @@ label{display:block;font-size:13px;color:var(--mute);margin:12px 0 4px}
 const DEFAULT_CATS=["Dak","Buitenschrijnwerk","Gevel","Isolatie","Overige"];
 let sortKey="",sortDir=1,dlRec=null,dlBlob=null;
 const PR="@prijzen",CL="@klanten",DEFAULT_CCATS=["Dakwerken","Buitenschrijnwerk","Gevel","Gevelbekleding"];
-let pricesOpen=false,clOpen=new Set(),clientCats=[],clientSubs={},curCSub="",clients=[],clientRating="",cRating="",editingClient=null,supIdx=-1;
+let pricesOpen=false,clOpen=new Set(),clientCats=[],clientSubs={},curCSub="",csOpen=new Set(),clients=[],clientRating="",cRating="",editingClient=null,supIdx=-1;
 const RATES={good:["Goed","hsl(145 58% 36%)"],avg:["Gemiddeld","hsl(32 92% 47%)"],bad:["Slecht","hsl(2 72% 50%)"]};
 function setSort(k){if(sortKey===k)sortDir=-sortDir;else{sortKey=k;sortDir=1}render()}
 [["thAmt","amount"],["thDate","date"]].forEach(([id,k])=>{const h=document.getElementById(id);h.onclick=()=>setSort(k);h.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setSort(k)}}});
@@ -482,7 +482,7 @@ function renderCats(){
   let h=`<button class="cat${cur==="All"?" on":""}" data-c="All"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Home</span><span>${quotes.length}</span></button>`;
   h+=`<button class="cat${cur===CL&&!curSub?" on":""}" data-c="${CL}" data-k="root" aria-expanded="${openCats.has(CL)}"><span>${svgI("users")}Klanten</span><span>${clients.length}</span></button>`;
   if(openCats.has(CL))clientCats.forEach(k=>{h+=`<button class="cat sub${cur===CL&&curSub===k?" on":""}" data-c="${CL}" data-s="${esc(k)}" data-k="cat"><span>${esc(k)}</span><span>${clients.filter(x=>x.cat===k).length}</span></button>`;
-    if(cur===CL&&curSub===k)(clientSubs[k]||[]).forEach(u=>{h+=`<button class="cat sub sub2${curCSub===u?" on":""}" data-c="${CL}" data-s="${esc(k)}" data-u="${esc(u)}" data-k="csub"><span>${esc(u)}</span><span>${clients.filter(x=>x.cat===k&&x.sub===u).length}</span></button>`})});
+    if(cur===CL&&curSub===k&&csOpen.has(k))(clientSubs[k]||[]).forEach(u=>{h+=`<button class="cat sub sub2${curCSub===u?" on":""}" data-c="${CL}" data-s="${esc(k)}" data-u="${esc(u)}" data-k="csub"><span>${esc(u)}</span><span>${clients.filter(x=>x.cat===k&&x.sub===u).length}</span></button>`})});
   h+=`<button class="cat${cur===PR?" on":""}" data-c="${PR}" data-k="prices" aria-expanded="${pricesOpen}"><span>${svgI("tag")}Prijzen</span><span>${cats.length}</span></button>`;
   if(pricesOpen)h+='<div class="grp">';
   if(pricesOpen)cats.forEach(c=>{
@@ -605,6 +605,7 @@ $("cats").addEventListener("drop",async e=>{const d=dropInfo(e);if(!d)return;e.p
   cats.splice(to,0,m);dragName=null;saveCats();render()});
 $("cats").addEventListener("dragend",()=>{dragName=null;clearDrop()});
 $("cats").onclick=e=>{const b=e.target.closest(".cat");if(b){const c=b.dataset.c,s=b.dataset.s||"";
+  if(b.dataset.k==="cat"){const was=cur===CL&&curSub===s&&csOpen.has(s);csOpen.clear();if(!was)csOpen.add(s)}
   if(c===PR){const close=cur===PR&&pricesOpen;pricesOpen=!close;openCats.clear();cur=PR;curSub="";$("q").value="";render();return}
   const toggleClose=c!=="All"&&!s&&cur===c&&!curSub&&openCats.has(c);
   openCats.clear();if(c!=="All"&&!toggleClose)openCats.add(c);
@@ -739,7 +740,7 @@ async function deleteClientCat(k){const n=clients.filter(c=>c.cat===k).length;
 async function addClientSub(k){const v=await renameDlg("","","Nieuwe subcategorie in “"+k+"”","Toevoegen");if(!v)return;
   const l=clientSubs[k]||(clientSubs[k]=[]);
   if(l.some(x=>x.toLowerCase()===v.toLowerCase())){await ask("Die subcategorie bestaat al.");return}
-  l.push(v);saveClients();cur=CL;curSub=k;curCSub=v;openCats.clear();openCats.add(CL);$("q").value="";render()}
+  l.push(v);saveClients();cur=CL;curSub=k;curCSub=v;csOpen.clear();csOpen.add(k);openCats.clear();openCats.add(CL);$("q").value="";render()}
 async function renameClientSub(k,u){const v=await renameDlg("",u,"Subcategorie hernoemen");if(!v||v===u)return;
   const l=clientSubs[k]||[];if(l.some(x=>x!==u&&x.toLowerCase()===v.toLowerCase())){await ask("Die subcategorie bestaat al.");return}
   clientSubs[k]=l.map(x=>x===u?v:x);clients.forEach(c=>{if(c.cat===k&&c.sub===u)c.sub=v});if(curCSub===u)curCSub=v;saveClients();render()}
@@ -833,7 +834,7 @@ async function saveClient(){const name=$("clName").value.trim();
   Object.assign(rec,{name,cat:$("clCat").value,sub:(clientSubs[$("clCat").value]||[]).includes($("clSub").value)?$("clSub").value:"",person:$("clPerson").value.trim(),phone:$("clPhone").value.trim(),email:$("clMail").value.trim(),address:$("clAddr").value.trim(),notes:$("clNote").value.trim(),tags:$("clTags").value.split(",").map(t=>t.trim()).filter(Boolean),rating:cRating});
   if(!editingClient)clients.push(rec);
   if(old&&old.trim().toLowerCase()!==name.toLowerCase()){for(const q of quotes)if((q.supplier||"").trim().toLowerCase()===old.trim().toLowerCase()){q.supplier=name;if(!dir)await put(q).catch(()=>{})}}
-  saveClients();$("clDlg").close();$("q").value="";cur=CL;curSub=rec.cat||"";curCSub=rec.sub||"";clientRating="";openCats.clear();openCats.add(CL);render()}
+  saveClients();$("clDlg").close();$("q").value="";cur=CL;curSub=rec.cat||"";curCSub=rec.sub||"";csOpen.clear();if(rec.sub)csOpen.add(rec.cat);clientRating="";openCats.clear();openCats.add(CL);render()}
 $("clCat").addEventListener("change",()=>fillCSub(""));
 $("clCancel").onclick=()=>$("clDlg").close();$("clSave").onclick=saveClient;
 $("clRate").onclick=e=>{const b=e.target.closest(".rb");if(b)setCRate(b.dataset.v)};
