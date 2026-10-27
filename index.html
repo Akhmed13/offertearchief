@@ -481,7 +481,7 @@ function catCol(n){const c=catObj(n);if(!c)return "hsl(205 58% 52%)";if(c.hue==n
 function renderCats(){
   let h=`<button class="cat${cur==="All"?" on":""}" data-c="All"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Home</span><span>${quotes.length}</span></button>`;
   h+=`<button class="cat${cur===CL&&!curSub?" on":""}" data-c="${CL}" data-k="root" aria-expanded="${openCats.has(CL)}"><span>${svgI("users")}Klanten</span><span>${clients.length}</span></button>`;
-  if(openCats.has(CL))clientCats.forEach(k=>{h+=`<button class="cat sub${cur===CL&&curSub===k?" on":""}" data-c="${CL}" data-s="${esc(k)}" data-k="cat"><span>${esc(k)}</span><span>${clients.filter(x=>x.cat===k).length}</span></button>`;
+  if(openCats.has(CL))clientCats.forEach(k=>{h+=`<button class="cat sub${cur===CL&&curSub===k?" on":""}" draggable="true" data-c="${CL}" data-s="${esc(k)}" data-k="cat"><span>${esc(k)}</span><span>${clients.filter(x=>x.cat===k).length}</span></button>`;
     if(cur===CL&&curSub===k&&csOpen.has(k))(clientSubs[k]||[]).forEach(u=>{h+=`<button class="cat sub sub2${curCSub===u?" on":""}" data-c="${CL}" data-s="${esc(k)}" data-u="${esc(u)}" data-k="csub"><span>${esc(u)}</span><span>${clients.filter(x=>x.cat===k&&x.sub===u).length}</span></button>`})});
   h+=`<button class="cat${cur===PR?" on":""}" data-c="${PR}" data-k="prices" aria-expanded="${pricesOpen}"><span>${svgI("tag")}Prijzen</span><span>${cats.length}</span></button>`;
   if(pricesOpen)h+='<div class="grp">';
@@ -588,12 +588,13 @@ function openForm(rec){
 
 function ask(msg,ok){return new Promise(res=>{const d=$("cfm");$("cMsg").textContent=msg;$("cOk").textContent=ok||"OK";$("cNo").hidden=!ok;
   const done=v=>{d.close();res(v)};$("cOk").onclick=()=>done(true);$("cNo").onclick=()=>done(false);d.oncancel=()=>res(false);d.showModal()})}
-let dragName=null;
+let dragName=null,dragC=null;
 function clearDrop(){document.querySelectorAll("#cats .drop-before,#cats .drop-after,#cats .dragging").forEach(e=>e.classList.remove("drop-before","drop-after","dragging"))}
 function dropInfo(e){const b=e.target.closest&&e.target.closest("#cats .cat");if(!b||!dragName)return null;
   const c=b.dataset.c;if(c==="All"||c===CL||c===PR||c===dragName)return null;
   const r=b.getBoundingClientRect(),after=!!b.dataset.s||e.clientY>r.top+r.height/2;return{b,c,after}}
 $("cats").addEventListener("dragstart",e=>{const b=e.target.closest&&e.target.closest(".cat[draggable=true]");if(!b){e.preventDefault();return}
+  if(b.dataset.k==="cat"){dragC=b.dataset.s;dragName=null;b.classList.add("dragging");e.dataTransfer.effectAllowed="move";try{e.dataTransfer.setData("text/plain",dragC)}catch(err){}return}
   dragName=b.dataset.c;b.classList.add("dragging");e.dataTransfer.effectAllowed="move";try{e.dataTransfer.setData("text/plain",dragName)}catch(err){}});
 $("cats").addEventListener("dragover",e=>{const d=dropInfo(e);if(!d)return;e.preventDefault();e.dataTransfer.dropEffect="move";
   document.querySelectorAll("#cats .drop-before,#cats .drop-after").forEach(x=>x.classList.remove("drop-before","drop-after"));
@@ -603,7 +604,17 @@ $("cats").addEventListener("drop",async e=>{const d=dropInfo(e);if(!d)return;e.p
   const from=cats.findIndex(c=>c.name===dn);if(from<0){dragName=null;return}
   const [m]=cats.splice(from,1);let to=cats.findIndex(c=>c.name===d.c);if(to<0)to=cats.length;if(d.after)to++;
   cats.splice(to,0,m);dragName=null;saveCats();render()});
-$("cats").addEventListener("dragend",()=>{dragName=null;clearDrop()});
+$("cats").addEventListener("dragend",()=>{dragName=null;dragC=null;clearDrop()});
+function cDropInfo(e){const b=e.target.closest&&e.target.closest('#cats .cat[data-k="cat"]');if(!b||dragC==null||b.dataset.s===dragC)return null;
+  const r=b.getBoundingClientRect();return{b,s:b.dataset.s,after:e.clientY>r.top+r.height/2}}
+$("cats").addEventListener("dragover",e=>{const d=cDropInfo(e);if(!d)return;e.preventDefault();e.dataTransfer.dropEffect="move";
+  document.querySelectorAll("#cats .drop-before,#cats .drop-after").forEach(x=>x.classList.remove("drop-before","drop-after"));
+  d.b.classList.add(d.after?"drop-after":"drop-before")});
+$("cats").addEventListener("drop",async e=>{const d=cDropInfo(e);if(!d)return;e.preventDefault();const dn=dragC;
+  clearDrop();dragC=null;if(!await guard())return;
+  const from=clientCats.indexOf(dn);if(from<0)return;
+  clientCats.splice(from,1);let to=clientCats.indexOf(d.s);if(to<0)to=clientCats.length;if(d.after)to++;
+  clientCats.splice(to,0,dn);saveClients();render()});
 $("cats").onclick=e=>{const b=e.target.closest(".cat");if(b){const c=b.dataset.c,s=b.dataset.s||"";
   if(b.dataset.k==="cat"){const was=cur===CL&&curSub===s&&csOpen.has(s);csOpen.clear();if(!was)csOpen.add(s)}
   if(c===PR){const close=cur===PR&&pricesOpen;pricesOpen=!close;openCats.clear();cur=PR;curSub="";$("q").value="";render();return}
