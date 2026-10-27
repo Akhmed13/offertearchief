@@ -31,6 +31,32 @@ aside h1{font:700 21px/1.1 'Barlow Condensed',Arial Narrow,sans-serif;margin:0;l
 .cat svg{width:16px;height:16px;margin-right:9px;vertical-align:-3px;opacity:.85}
 .cat.sub{margin-left:18px;width:calc(100% - 18px);padding-left:14px;border-radius:0 8px 8px 0;border-left:2px solid rgba(255,255,255,.14);font-size:14px}
 .cat.sub.on{border-left-color:#fff}
+.pjs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.pjs .fchip.off{opacity:.5}
+.pjmw{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:0 0 26px}
+.pjm{border-collapse:collapse;width:100%;min-width:480px;font-size:14px}
+.pjm th,.pjm td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+.pjm thead th{font:700 15px 'Barlow Condensed',Arial Narrow,sans-serif;letter-spacing:.3px;background:var(--bg);position:sticky;top:0}
+.pjm thead th small{display:block;font:400 12px Barlow,sans-serif;color:var(--mute)}
+.pjm td small{display:block;color:var(--mute);font-size:12px}
+.pjm td.best{background:var(--goodbg);color:var(--good)}.pjm td.best small{color:inherit;opacity:.8}
+.pjm td.amt{font-variant-numeric:tabular-nums;white-space:nowrap}
+.pjm tfoot td,.pjm tfoot th{font-weight:700;border-bottom:0;background:var(--bg)}
+.pjm tr.sub td:first-child{padding-left:28px}
+.pjc{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:0 0 10px;overflow:hidden}
+.pjh{display:flex;align-items:center;gap:14px;width:100%;background:none;border:0;padding:14px 16px;font:inherit;color:var(--ink);text-align:left;cursor:pointer}
+.pjh:hover{background:var(--bg)}
+.pjh b{font:700 19px 'Barlow Condensed',Arial Narrow,sans-serif;flex:1;min-width:0;overflow-wrap:anywhere}
+.pjh .chv{width:18px;height:18px;flex:none;color:var(--mute);transition:transform .15s}
+.pjh[aria-expanded=false] .chv{transform:rotate(-90deg)}
+.pjh span{color:var(--mute);font-size:13px;white-space:nowrap}.pjh span em{font-style:normal;color:var(--ink);font-weight:700}
+.pjd{padding:0 16px 14px}
+.pjd .pjm{min-width:0}
+.pjd .btns{margin-top:12px;justify-content:flex-start}
+body.dropping main{outline:3px dashed var(--acc);outline-offset:-10px}
+#aiMsg{margin:6px 0 0;min-height:0}#aiMsg:empty{display:none}
+.auto{box-shadow:0 0 0 2px color-mix(in srgb,var(--acc) 45%,transparent)}
+
 .cico{display:inline-grid;place-items:center;flex:none;width:24px;height:24px;border-radius:7px;font-style:normal;background:hsl(var(--h) 65% 52%/.2);color:hsl(var(--h) 80% 62%);vertical-align:middle}
 .cat .cico{margin-right:9px}.cat .cico svg,.cico svg{width:16px;height:16px;margin:0;opacity:1;vertical-align:0}
 .cat.on .cico{background:rgba(255,255,255,.28);color:inherit}
@@ -292,6 +318,7 @@ label{display:block;font-size:13px;color:var(--mute);margin:12px 0 4px}
       <button class="p" id="addBtn">Offerte toevoegen</button>
     </div>
     <div id="clients" hidden></div>
+    <div id="projects" hidden></div>
     <div id="dash" hidden></div>
     <div class="ov" id="overview" hidden></div>
     <div class="wrap" id="wrap"><table>
@@ -308,12 +335,12 @@ label{display:block;font-size:13px;color:var(--mute);margin:12px 0 4px}
     <div class="row"><div><label>Categorie</label><select id="fCat"></select></div>
     <div><label>Subcategorie</label><select id="fSub"></select></div></div>
     <div class="row"><div><label>Leverancier / onderaannemer</label><div class="combo"><input id="fSup" required autocomplete="off" placeholder="Kies klant of typ naam"><div class="suplist" id="supList" hidden></div></div></div>
-    <div><label>Project</label><input id="fPro"></div></div>
+    <div><label>Project</label><input id="fPro" list="projList" autocomplete="off"><datalist id="projList"></datalist></div></div>
     <div class="row"><div><label>Bedrag (excl. btw)</label><input id="fAmt" type="number" step="0.01" min="0"></div>
     <div><label>Datum ontvangen</label><input id="fDate" type="date"></div></div>
     <label>Notities</label><textarea id="fNote" rows="2"></textarea>
     <label>Trefwoorden (gescheiden door komma's)</label><input id="fTags" placeholder="bv. zink, 25 jaar garantie, steiger inbegrepen">
-    <label id="fileLbl">Pdf-bestand</label><input id="fFile" type="file" accept="application/pdf,.pdf">
+    <label id="fileLbl">Pdf-bestand</label><input id="fFile" type="file" accept="application/pdf,.pdf"><div class="note" id="aiMsg" aria-live="polite"></div>
     <div class="msg" id="msg" role="alert"></div>
     <div class="btns"><button type="button" class="s" id="cancel">Annuleren</button><button class="p" type="submit">Offerte opslaan</button></div>
   </form>
@@ -361,7 +388,7 @@ label{display:block;font-size:13px;color:var(--mute);margin:12px 0 4px}
 <script>
 const DEFAULT_CATS=["Dak","Buitenschrijnwerk","Gevel","Isolatie","Overige"];
 let sortKey="",sortDir=1,dlRec=null,dlBlob=null;
-const PR="@prijzen",CL="@klanten",DEFAULT_CCATS=["Dakwerken","Buitenschrijnwerk","Gevel","Gevelbekleding"];
+const PR="@prijzen",CL="@klanten",PJ="@projecten",DEFAULT_CCATS=["Dakwerken","Buitenschrijnwerk","Gevel","Gevelbekleding"];
 let pricesOpen=false,clOpen=new Set(),clientCats=[],clientSubs={},curCSub="",csOpen=new Set(),clients=[],clientRating="",cRating="",editingClient=null,supIdx=-1;
 const RATES={good:["Goed","hsl(145 58% 36%)"],avg:["Gemiddeld","hsl(32 92% 47%)"],bad:["Slecht","hsl(2 72% 50%)"]};
 function setSort(k){if(sortKey===k)sortDir=-sortDir;else{sortKey=k;sortDir=1}render()}
@@ -509,6 +536,7 @@ function renderCats(){
     if(openCats.has(c.name))c.subs.forEach(s=>{h+=`<button class="cat sub${curSub===s?" on":""}" data-c="${esc(c.name)}" data-s="${esc(s)}"><span>${esc(s)}</span><span>${quotes.filter(x=>x.category===c.name&&x.subcategory===s).length}</span></button>`});
   });
   if(pricesOpen)h+=cats.length?'</div>':'<div class="supe" style="padding:6px 14px;opacity:.6">Rechtsklik op “Prijzen” om een categorie toe te voegen.</div></div>';
+  h+=`<button class="cat${cur===PJ?" on":""}" data-c="${PJ}" data-k="projects"><span>${svgI("folder")}Projecten</span><span>${projGroups().filter(g=>g.k).length}</span></button>`;
   $("cats").innerHTML=h;
   $("fCat").innerHTML=cats.map(c=>`<option>${esc(c.name)}</option>`).join("");
   
@@ -560,9 +588,10 @@ $("dash").onclick=e=>{
   const b=e.target.closest("button[data-c]");if(!b)return;pricesOpen=true;cur=b.dataset.c;curSub=b.dataset.s||"";$("q").value="";openCats.clear();openCats.add(cur);render()};
 function render(){
   renderCats();
-  $("clients").hidden=cur!==CL;
+  $("clients").hidden=cur!==CL;$("projects").hidden=cur!==PJ;
   $("addBtn").textContent=cur===CL?"Klant toevoegen":"Offerte toevoegen";
-  $("q").placeholder=cur===CL?"Zoek klanten (a, b)":"Zoek ook in pdf (woord, woord)";
+  $("q").placeholder=cur===CL?"Zoek klanten (a, b)":cur===PJ?"Zoek project of leverancier":"Zoek ook in pdf (woord, woord)";
+  if(cur===PJ){$("wrap").hidden=true;$("overview").hidden=true;$("dash").hidden=true;$("title").textContent="Projecten";renderProjects();return}
   if(cur===CL){$("wrap").hidden=true;$("overview").hidden=true;$("dash").hidden=true;renderClients();return}
   const term=$("q").value.toLowerCase();
   const ov=(cur==="All"||cur===PR)&&!term,isPr=cur===PR;
@@ -598,7 +627,8 @@ function render(){
 function openForm(rec){
   editing=rec||null;$("form").reset();$("supList").hidden=true;$("msg").textContent="";
   $("dlgTitle").textContent=rec?"Offerte bewerken":"Offerte toevoegen";
-  $("fCat").value=rec?rec.category:(cur!=="All"?cur:cats[0].name);fillSubs(rec?rec.subcategory:curSub);
+  $("fCat").value=rec?rec.category:(cur!=="All"&&catObj(cur)?cur:cats[0].name);fileText=null;$("aiMsg").textContent="";
+  $("projList").innerHTML=[...new Map(quotes.filter(q=>q.project&&q.project.trim()).map(q=>[normN(q.project),q.project.trim()])).values()].sort((a,b)=>a.localeCompare(b,"nl")).map(n=>`<option value="${esc(n)}">`).join("");fillSubs(rec?rec.subcategory:curSub);
   if(rec){$("fSup").value=rec.supplier;$("fPro").value=rec.project;$("fAmt").value=rec.amount;$("fDate").value=rec.date;$("fNote").value=rec.notes;$("fTags").value=(rec.tags||[]).join(", ");
     $("fileLbl").textContent="Pdf-bestand (huidig: "+(rec.fileName||"geen")+"; kies een nieuw bestand om te vervangen)"}
   else{$("fDate").value=new Date().toISOString().slice(0,10);$("fileLbl").textContent="Pdf-bestand"}
@@ -610,7 +640,7 @@ function ask(msg,ok){return new Promise(res=>{const d=$("cfm");$("cMsg").textCon
 let dragName=null,dragC=null;
 function clearDrop(){document.querySelectorAll("#cats .drop-before,#cats .drop-after,#cats .dragging").forEach(e=>e.classList.remove("drop-before","drop-after","dragging"))}
 function dropInfo(e){const b=e.target.closest&&e.target.closest("#cats .cat");if(!b||!dragName)return null;
-  const c=b.dataset.c;if(c==="All"||c===CL||c===PR||c===dragName)return null;
+  const c=b.dataset.c;if(c==="All"||c===CL||c===PR||c===PJ||c===dragName)return null;
   const r=b.getBoundingClientRect(),after=!!b.dataset.s||e.clientY>r.top+r.height/2;return{b,c,after}}
 $("cats").addEventListener("dragstart",e=>{const b=e.target.closest&&e.target.closest(".cat[draggable=true]");if(!b){e.preventDefault();return}
   if(b.dataset.k==="cat"){dragC=b.dataset.s;dragName=null;b.classList.add("dragging");e.dataTransfer.effectAllowed="move";try{e.dataTransfer.setData("text/plain",dragC)}catch(err){}return}
@@ -639,7 +669,7 @@ $("cats").onclick=e=>{const b=e.target.closest(".cat");if(b){const c=b.dataset.c
   if(c===PR){const close=cur===PR&&pricesOpen;pricesOpen=!close;openCats.clear();cur=PR;curSub="";$("q").value="";render();return}
   const toggleClose=c!=="All"&&!s&&cur===c&&!curSub&&openCats.has(c);
   openCats.clear();if(c!=="All"&&!toggleClose)openCats.add(c);
-  if(c==="All"||(c===CL&&!s))pricesOpen=false;
+  if(c==="All"||(c===CL&&!s)||c===PJ)pricesOpen=false;
   cur=c;curSub=s;curCSub=b.dataset.u||"";$("q").value="";render()}};
 
 async function deleteCurrent(){
@@ -707,7 +737,7 @@ $("ctx").onclick=async e=>{const b=e.target.closest("button");if(!b||!ctxT)retur
 document.addEventListener("click",e=>{if(!e.target.closest("#ctx"))$("ctx").hidden=true});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")$("ctx").hidden=true});
 window.addEventListener("scroll",()=>{$("ctx").hidden=true},true);
-$("cats").oncontextmenu=e=>{const b=e.target.closest(".cat");if(!b||b.dataset.c==="All")return;showCtx(e,b.dataset.c,b.dataset.s||"",b.dataset.k||"q",b.dataset.u||"")};
+$("cats").oncontextmenu=e=>{const b=e.target.closest(".cat");if(!b||b.dataset.c==="All"||b.dataset.c===PJ)return;showCtx(e,b.dataset.c,b.dataset.s||"",b.dataset.k||"q",b.dataset.u||"")};
 $("overview").oncontextmenu=e=>{const b=e.target.closest("button");if(!b)return;showCtx(e,b.dataset.c,b.dataset.s||"")};
 let appName="Offertearchief";
 function applyTitle(v){appName=v;$("appTitle").textContent=v;document.title=v}
@@ -765,14 +795,104 @@ function pdfLib(){return pjP||(pjP=(async()=>{const[lib,wk]=await Promise.all([g
   const m=await import(URL.createObjectURL(new Blob([lib],{type:"text/javascript"})));
   m.GlobalWorkerOptions.workerSrc=URL.createObjectURL(new Blob([wk],{type:"text/javascript"}));return m})().catch(e=>{pjP=null;throw e}))}
 async function pdfText(blob){const m=await pdfLib();const task=m.getDocument({data:new Uint8Array(await blob.arrayBuffer())}),doc=await task.promise;let t="";
-  try{for(let i=1;i<=Math.min(doc.numPages,80)&&t.length<100000;i++){const pg=await doc.getPage(i),c=await pg.getTextContent();t+=c.items.map(x=>x.str).join(" ")+" "}}finally{try{task.destroy()}catch(e){}}
-  return t.replace(/\s+/g," ").trim().slice(0,100000)}
+  try{for(let i=1;i<=Math.min(doc.numPages,80)&&t.length<100000;i++){const pg=await doc.getPage(i),c=await pg.getTextContent();t+=c.items.map(x=>x.str+(x.hasEOL?"\n":" ")).join("")+"\n"}}finally{try{task.destroy()}catch(e){}}
+  return t.replace(/[ \t\u00a0]+/g," ").replace(/ ?\n ?/g,"\n").replace(/\n{2,}/g,"\n").trim().slice(0,100000)}
 let idxBusy=false;const idxTried=new Set();
 async function indexMissing(){if(idxBusy)return;const todo=()=>quotes.filter(q=>typeof q.text!=="string"&&(q.blob||(q.path&&dir))&&!idxTried.has(q.id));
   if(!todo().length)return;idxBusy=true;const n0=todo().length;let n=0,ch=false;const note=$("idxNote");
   try{for(const q of todo()){idxTried.add(q.id);note.hidden=false;note.textContent="PDF’s doorzoekbaar maken… "+(++n)+"/"+n0;
     try{const b=q.blob||await readPdf(q.path);q.text=await pdfText(b);ch=true;if(!dir)await put(q)}catch(e){}}
     if(ch&&dir)await saveIndex().catch(()=>{})}finally{idxBusy=false;note.hidden=true;if(ch&&$("q").value.trim())render()}}
+
+/* ---------- automatisch invullen uit de pdf ---------- */
+const MND={januari:1,jan:1,februari:2,feb:2,maart:3,mrt:3,april:4,apr:4,mei:5,juni:6,jun:6,juli:7,jul:7,augustus:8,aug:8,september:9,sept:9,sep:9,oktober:10,okt:10,november:11,nov:11,december:12,dec:12};
+function parseMoney(x){let t=x.replace(/[€\s]/g,"");const lc=t.lastIndexOf(","),ld=t.lastIndexOf(".");
+  if(lc>-1&&ld>-1)t=lc>ld?t.replace(/\./g,"").replace(",","."):t.replace(/,/g,"");else if(lc>-1)t=t.replace(/\./g,"").replace(",",".");
+  return parseFloat(t)}
+function pickAmount(t){const MR=/\d{1,3}(?:\.\d{3})*,\d{2}|\d+,\d{2}/,all=[];
+  const groups=[/totaal\s*(?:bedrag\s*)?(?:te\s*betalen\s*)?\(?\s*incl/gi,/te\s*betalen|totaal\s*bedrag|totaalbedrag|total\s*incl|totaal\s*(?:eur|€)/gi,/\btotaal\b|\btotal\b/gi];
+  for(const re of groups){const c=[];let m;while((m=re.exec(t))){const v=MR.exec(t.slice(m.index,m.index+90));if(v){const n=parseMoney(v[0]);if(n>0)c.push(n)}}
+    if(c.length)return Math.max(...c)}
+  const g=new RegExp(MR.source,"g");let m;while((m=g.exec(t))){const n=parseMoney(m[0]);if(n>0)all.push(n)}
+  return all.length?Math.max(...all):null}
+function pickDate(t){const c=[];let m;
+  const r1=/\b(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})\b/g;while((m=r1.exec(t)))c.push({i:m.index,d:+m[1],mo:+m[2],y:+m[3]});
+  const r2=new RegExp("\\b(\\d{1,2})\\s+("+Object.keys(MND).sort((a,b)=>b.length-a.length).join("|")+")\\.?\\s+(\\d{4})\\b","gi");
+  while((m=r2.exec(t)))c.push({i:m.index,d:+m[1],mo:MND[m[2].toLowerCase()],y:+m[3]});
+  c.sort((a,b)=>a.i-b.i);
+  for(const x of c){if(x.mo<1||x.mo>12||x.d<1||x.d>31||x.y<2000||x.y>2100)continue;
+    if(/geldig|vervaldatum|uiterlijk|tot en met|leverdatum|uitvoering|betaling|vervalt/i.test(t.slice(Math.max(0,x.i-30),x.i)))continue;
+    return x.y+"-"+String(x.mo).padStart(2,"0")+"-"+String(x.d).padStart(2,"0")}
+  return ""}
+function pickSupplier(t){const nt=normN(t);let best=null;
+  for(const c of clients){const k=normN(c.name);if(k.length>=3&&nt.includes(k)&&(!best||k.length>normN(best.name).length))best=c}
+  if(best)return best.name;
+  const m=t.match(/([A-ZÀ-Ý0-9][\wÀ-ÿ&.'\-]*(?: +[A-ZÀ-Ý0-9&][\wÀ-ÿ&.'\-]*){0,4} +(?:BVBA|BV|NV|SRL|SPRL|VOF|CVBA|GCV|SA|GmbH))\b/);
+  return m?m[1].trim():""}
+function pickProject(t){const m=t.match(/(?:project|werf|betreft|onderwerp)\s*[:\-]\s*(.{3,90}?)(?=\s(?:datum|offerte|pagina|totaal|btw|bedrag|uw ref|onze ref|klant|ondernemingsnummer|referentie)\b|\n|$)/i);
+  return m?m[1].trim().slice(0,70):""}
+let fileText=null;
+async function autoFill(){const f=$("fFile").files[0],am=$("aiMsg");fileText=null;am.textContent="";if(!f)return;
+  am.textContent="De pdf wordt gelezen…";let t="";try{t=await pdfText(f)}catch(e){am.textContent="";return}
+  if($("fFile").files[0]!==f)return;fileText={f,t};
+  if(!t){am.textContent="Geen tekst gevonden in deze pdf (waarschijnlijk een scan). Vul de gegevens zelf in.";return}
+  const got=[],mark=el=>{el.classList.add("auto");el.addEventListener("input",()=>el.classList.remove("auto"),{once:true})};
+  const today=new Date().toISOString().slice(0,10);
+  const sup=pickSupplier(t),amt=pickAmount(t),dt=pickDate(t),pr=pickProject(t);
+  if(sup&&!$("fSup").value.trim()){$("fSup").value=sup;mark($("fSup"));got.push("leverancier")}
+  if(amt!=null&&$("fAmt").value===""){$("fAmt").value=amt.toFixed(2);mark($("fAmt"));got.push("bedrag")}
+  if(dt&&(!$("fDate").value||(!editing&&$("fDate").value===today))){$("fDate").value=dt;mark($("fDate"));got.push("datum")}
+  if(pr&&!$("fPro").value.trim()){$("fPro").value=pr;mark($("fPro"));got.push("project")}
+  am.textContent=got.length?"Automatisch ingevuld uit de pdf: "+got.join(", ")+". Controleer de gegevens.":"Ik kon geen gegevens uit de pdf halen. Vul ze zelf in."}
+$("fFile").addEventListener("change",autoFill);
+(()=>{let n=0;const has=e=>e.dataTransfer&&[...(e.dataTransfer.types||[])].includes("Files");
+  addEventListener("dragenter",e=>{if(has(e)){n++;document.body.classList.add("dropping")}});
+  addEventListener("dragleave",e=>{if(has(e)&&--n<=0){n=0;document.body.classList.remove("dropping")}});
+  addEventListener("dragover",e=>{if(has(e))e.preventDefault()});
+  addEventListener("drop",async e=>{if(!has(e))return;e.preventDefault();n=0;document.body.classList.remove("dropping");
+    const f=[...e.dataTransfer.files].find(x=>/pdf$/i.test(x.name)||x.type==="application/pdf");if(!f)return;
+    if(document.querySelector("dialog[open]")&&!$("dlg").open)return;
+    if(!$("dlg").open){if(!await guard())return;if(!cats.length){await ask("Voeg eerst een categorie toe.");return}if(cur===CL)cur="All";openForm()}
+    const dt=new DataTransfer();dt.items.add(f);$("fFile").files=dt.files;autoFill()})})();
+
+/* ---------- Projecten ---------- */
+let pjSel=null,pjOpen=new Set();
+function projGroups(){const m=new Map();quotes.forEach(q=>{const nm=(q.project||"").trim(),k=nm?normN(nm)||nm.toLowerCase():"";const g=m.get(k)||{k,name:nm||"Zonder project",qs:[]};g.qs.push(q);m.set(k,g)});
+  return [...m.values()].sort((a,b)=>(a.k===""?1:0)-(b.k===""?1:0)||a.name.localeCompare(b.name,"nl"))}
+function projLines(g){const m=new Map();g.qs.forEach(q=>{const k=(q.category||"")+"|"+(q.subcategory||"");const l=m.get(k)||{k,cat:q.category||"",sub:q.subcategory||"",qs:[]};l.qs.push(q);m.set(k,l)});
+  return [...m.values()].map(l=>{l.qs.sort((x,y)=>(x.amount===""||x.amount==null?1e15:x.amount)-(y.amount===""||y.amount==null?1e15:y.amount));const a=l.qs.filter(q=>q.amount!==""&&q.amount!=null);l.low=a[0]||null;l.high=a[a.length-1]||null;return l}).sort((a,b)=>a.cat.localeCompare(b.cat,"nl")||a.sub.localeCompare(b.sub,"nl"))}
+function projTot(ls){let lo=0,hi=0,c=0;ls.forEach(l=>{if(l.low){lo+=l.low.amount;hi+=l.high.amount;c++}});return{lo,hi,c}}
+const lineName=l=>esc(l.cat)+(l.sub?" / "+esc(l.sub):"");
+function renderProjects(){const el=$("projects"),term=$("q").value.trim().toLowerCase();
+  let gs=projGroups();if(term)gs=gs.filter(g=>hit([g.name,...g.qs.map(q=>q.supplier+" "+q.category+" "+(q.subcategory||""))].join(" "),term));
+  if(!quotes.length){el.innerHTML='<div class="dcard"><p class="dnote">Nog geen offertes. Vul bij een offerte het veld “Project” in, dan verschijnen de projecten hier en kun je ze vergelijken.</p></div>';return}
+  if(!gs.length){el.innerHTML='<div class="dcard"><p class="dnote">Geen projecten gevonden.</p></div>';return}
+  const named=gs.filter(g=>g.k),sel=named.filter(g=>pjSel===null||pjSel.has(g.k));
+  let h="";
+  if(named.length>=1){
+    h+='<div class="sech"><h3>Vergelijking</h3></div><div class="pjs">'+named.map(g=>`<button type="button" class="fchip${pjSel===null||pjSel.has(g.k)?" on":" off"}" data-pjt="${esc(g.k)}">${esc(g.name)}<span>${g.qs.length}</span></button>`).join("")+'</div>';
+    if(!sel.length)h+='<p class="note">Kies hierboven een of meer projecten om te vergelijken.</p>';
+    else{
+      const L=new Map(),per=sel.map(g=>{const ls=projLines(g);ls.forEach(l=>{if(!L.has(l.k))L.set(l.k,{cat:l.cat,sub:l.sub})});return{g,ls,m:new Map(ls.map(l=>[l.k,l])),t:projTot(ls)}});
+      const rows=[...L.entries()].sort((a,b)=>a[1].cat.localeCompare(b[1].cat,"nl")||a[1].sub.localeCompare(b[1].sub,"nl"));
+      const cell=(l,best)=>!l?'<td class="amt">–</td>':!l.low?`<td class="amt"><small>${l.qs.length===1?"1 offerte":l.qs.length+" offertes"}, geen bedrag</small></td>`:`<td class="amt${best?" best":""}">${money(l.low.amount)}<small>${esc(l.low.supplier)}${l.qs.length>1?" · "+l.qs.length+" offertes tot "+money(l.high.amount):""}</small></td>`;
+      h+='<div class="pjmw"><table class="pjm"><thead><tr><th>Onderdeel</th>'+per.map(x=>`<th>${esc(x.g.name)}<small>${x.g.qs.length===1?"1 offerte":x.g.qs.length+" offertes"}</small></th>`).join("")+'</tr></thead><tbody>'+
+        rows.map(([k,r])=>{const am=per.map(x=>x.m.get(k)&&x.m.get(k).low?x.m.get(k).low.amount:null),vals=am.filter(v=>v!=null),mn=vals.length>1?Math.min(...vals):null;
+          return `<tr><td>${esc(r.cat)}${r.sub?" / "+esc(r.sub):""}</td>${per.map((x,i)=>cell(x.m.get(k),mn!=null&&am[i]===mn)).join("")}</tr>`}).join("")+
+        '</tbody><tfoot><tr><th>Totaal (laagste per onderdeel)</th>'+per.map(x=>{const same=per.every(y=>y.t.c===x.t.c),mn=Math.min(...per.map(y=>y.t.lo));return `<td class="amt${per.length>1&&same&&x.t.lo===mn?" best":""}">${money(x.t.lo)}<small>${x.t.c} van ${rows.length} onderdelen</small></td>`}).join("")+'</tr></tfoot></table></div>'
+    }
+  }
+  h+='<div class="sech"><h3>Alle projecten</h3></div>';
+  gs.forEach(g=>{const ls=projLines(g),t=projTot(ls),op=!!term||pjOpen.has(g.k);
+    h+=`<div class="pjc"><button type="button" class="pjh" data-pj="${esc(g.k)}" aria-expanded="${op}"><svg class="chv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg><b>${esc(g.name)}</b><span>${g.qs.length===1?"1 offerte":g.qs.length+" offertes"}</span><span>Laagste totaal <em>${money(t.lo)}</em></span></button>`;
+    if(op)h+='<div class="pjd"><table class="pjm"><thead><tr><th>Onderdeel / leverancier</th><th>Bedrag</th><th>Ontvangen</th></tr></thead><tbody>'+ls.map(l=>`<tr><td colspan="3"><strong>${lineName(l)}</strong></td></tr>`+l.qs.map(q=>`<tr class="sub"><td>${esc(q.supplier)}</td><td class="amt${l.low&&q===l.low&&l.qs.filter(y=>y.amount!==""&&y.amount!=null).length>1?" best":""}">${money(q.amount)}</td><td class="amt">${esc(q.date)||"–"}</td></tr>`).join("")).join("")+
+      `</tbody><tfoot><tr><th>Laagste totaal / hoogste totaal</th><td class="amt" colspan="2">${money(t.lo)} / ${money(t.hi)}</td></tr></tfoot></table>${g.k?`<div class="btns"><button type="button" class="s" data-pjshow="${esc(g.k)}">Toon offertes in de lijst</button></div>`:""}</div>`;
+    h+="</div>"});
+  el.innerHTML=h}
+$("projects").onclick=e=>{const t=e.target.closest("button");if(!t)return;
+  if(t.dataset.pjt!==undefined){const k=t.dataset.pjt,all=projGroups().filter(g=>g.k).map(g=>g.k);if(pjSel===null)pjSel=new Set(all);pjSel.has(k)?pjSel.delete(k):pjSel.add(k);if(pjSel.size===all.length)pjSel=null;render();return}
+  if(t.dataset.pj!==undefined){const k=t.dataset.pj;pjOpen.has(k)?pjOpen.delete(k):pjOpen.add(k);render();return}
+  if(t.dataset.pjshow!==undefined){const g=projGroups().find(x=>x.k===t.dataset.pjshow);if(g){$("q").value=g.name;cur="All";curSub="";render()}}};
 
 /* ---------- Klanten ---------- */
 async function addClientCat(){const v=await renameDlg("","","Nieuwe categorie voor klanten","Toevoegen");if(!v)return;
@@ -935,7 +1055,7 @@ $("form").onsubmit=async e=>{
     category:$("fCat").value,subcategory:$("fSub").value,supplier:$("fSup").value.trim(),project:$("fPro").value.trim(),
     amount:a===""?"":parseFloat(a),date:$("fDate").value,notes:$("fNote").value.trim(),tags:$("fTags").value.split(",").map(t=>t.trim()).filter(Boolean),
     fileName:f?f.name:editing.fileName,blob:f?new Blob([await f.arrayBuffer()],{type:"application/pdf"}):editing.blob,text:f?undefined:editing.text};
-  if(f){$("msg").textContent="De pdf wordt gelezen…";try{rec.text=await pdfText(rec.blob)}catch(err){}$("msg").textContent=""}
+  if(f){if(fileText&&fileText.f===f)rec.text=fileText.t;else{$("msg").textContent="De pdf wordt gelezen…";try{rec.text=await pdfText(rec.blob)}catch(err){}$("msg").textContent=""}}
   try{
     if(dir){
       const old=editing&&editing.path,want=[rec.category,rec.subcategory].filter(Boolean).map(san).join("/");
