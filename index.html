@@ -334,7 +334,7 @@ label{display:block;font-size:13px;color:var(--mute);margin:12px 0 4px}
     <h2 style="margin:0;font:700 26px 'Barlow Condensed',sans-serif" id="dlgTitle">Offerte toevoegen</h2>
     <div class="row"><div><label>Categorie</label><select id="fCat"></select></div>
     <div><label>Subcategorie</label><select id="fSub"></select></div></div>
-    <div class="row"><div><label>Leverancier / onderaannemer</label><div class="combo"><input id="fSup" required autocomplete="off" placeholder="Kies klant of typ naam"><div class="suplist" id="supList" hidden></div></div><div class="note" id="supInfo" style="margin-top:6px"></div></div>
+    <div class="row"><div><label>Leverancier / onderaannemer</label><div class="combo"><input id="fSup" required autocomplete="off" placeholder="Kies klant of typ naam"><div class="suplist" id="supList" hidden></div></div></div>
     <div><label>Project</label><input id="fPro" list="projList" autocomplete="off"><datalist id="projList"></datalist></div></div>
     <div class="row"><div><label>Bedrag (excl. btw)</label><input id="fAmt" type="number" step="0.01" min="0"></div>
     <div><label>Datum ontvangen</label><input id="fDate" type="date"></div></div>
@@ -409,8 +409,6 @@ function saveClients(){if(dir){saveIndex().catch(()=>{});return}try{localStorage
 const normC=x=>(x||"").toLowerCase().replace(/\b(bvba|sprl|cvba|gmbh|srl|vof|gcv|bv|nv|sa)\b/g," ").replace(/[^a-z0-9]/g,"");
 function clientByName(n){n=(n||"").trim().toLowerCase();if(!n)return null;const k=normC(n);if(!k)return null;const ex=clients.find(c=>c.name.trim().toLowerCase()===n)||clients.find(c=>normC(c.name)===k);if(ex)return ex;
   const part=clients.filter(c=>{const a=normC(c.name),sh=a.length<=k.length?a:k,lo=a.length<=k.length?k:a;return sh.length>=5&&lo.startsWith(sh)});return part.length===1?part[0]:null}
-function supInfo(){const n=$("fSup").value.trim(),el=$("supInfo");if(!n){el.innerHTML="";return}const c=clientByName(n);
-  el.innerHTML=c?(c.rating&&RATES[c.rating]?`<i class="rdot" style="--r:${RATES[c.rating][1]}"></i>Klant <b>${esc(c.name)}</b> · beoordeling: <b>${RATES[c.rating][0].toLowerCase()}</b>`:`<i class="rdot" style="--r:var(--line)"></i>Klant <b>${esc(c.name)}</b> · nog geen beoordeling`):`<i class="rdot" style="--r:var(--line)"></i>Niet in je klantenlijst`}
 function rateDot(r){return r&&RATES[r]?`<i class="rdot" style="--r:${RATES[r][1]}" title="${RATES[r][0]}"></i>`:""}
 function saveCats(){if(dir){saveIndex().catch(()=>{});return}try{localStorage.setItem("qa-cats",JSON.stringify(cats))}catch(e){}}
 
@@ -632,7 +630,6 @@ function openForm(rec){
   editing=rec||null;$("form").reset();$("supList").hidden=true;$("msg").textContent="";
   $("dlgTitle").textContent=rec?"Offerte bewerken":"Offerte toevoegen";
   $("fCat").value=rec?rec.category:(cur!=="All"&&catObj(cur)?cur:cats[0].name);fileText=null;$("aiMsg").textContent="";
-  setTimeout(supInfo);
   $("projList").innerHTML=[...new Map(quotes.filter(q=>q.project&&q.project.trim()).map(q=>[normN(q.project),q.project.trim()])).values()].sort((a,b)=>a.localeCompare(b,"nl")).map(n=>`<option value="${esc(n)}">`).join("");fillSubs(rec?rec.subcategory:curSub);
   if(rec){$("fSup").value=rec.supplier;$("fPro").value=rec.project;$("fAmt").value=rec.amount;$("fDate").value=rec.date;$("fNote").value=rec.notes;$("fTags").value=(rec.tags||[]).join(", ");
     $("fileLbl").textContent="Pdf-bestand (huidig: "+(rec.fileName||"geen")+"; kies een nieuw bestand om te vervangen)"}
@@ -847,7 +844,7 @@ async function autoFill(){const f=$("fFile").files[0],am=$("aiMsg");fileText=nul
   const got=[],mark=el=>{el.classList.add("auto");el.addEventListener("input",()=>el.classList.remove("auto"),{once:true})};
   const today=new Date().toISOString().slice(0,10);
   let inclNote=false;const sup=pickSupplier(t),amt=pickAmount(t),dt=pickDate(t),pr=pickProject(t);
-  if(sup&&!$("fSup").value.trim()){$("fSup").value=sup;mark($("fSup"));got.push("leverancier");supInfo()}
+  if(sup&&!$("fSup").value.trim()){$("fSup").value=sup;mark($("fSup"));got.push("leverancier")}
   if(amt&&$("fAmt").value===""){$("fAmt").value=amt.v.toFixed(2);mark($("fAmt"));got.push("bedrag");if(amt.incl)inclNote=true}
   if(dt&&(!$("fDate").value||(!editing&&$("fDate").value===today))){$("fDate").value=dt;mark($("fDate"));got.push("datum")}
   if(pr&&!$("fPro").value.trim()){$("fPro").value=pr;mark($("fPro"));got.push("project")}
@@ -1037,8 +1034,7 @@ function showSup(){const l=$("supList"),t=$("fSup").value.trim().toLowerCase();s
   if(!pool.list.length){if(t){l.hidden=true;return}l.innerHTML='<div class="supe">'+(pool.label?"Nog geen klanten in “"+esc(pool.label)+"”.":"Nog geen klanten.")+' Voeg ze toe via “Klanten” in de zijbalk.</div>';l.hidden=false;return}
   if(!m.length){l.hidden=true;return}
   l.innerHTML=(pool.label?`<div class="supe">Klanten uit ${esc(pool.label)}</div>`:"")+m.map(c=>`<div class="supi" data-n="${esc(c.name)}">${rateDot(c.rating)}<span class="supn">${esc(c.name)}</span><small>${esc(c.person||"")}</small></div>`).join("");l.hidden=false}
-function pickSup(n){$("fSup").value=n;$("supList").hidden=true;supInfo()}
-$("fSup").addEventListener("input",supInfo);
+function pickSup(n){$("fSup").value=n;$("supList").hidden=true}
 $("supList").addEventListener("mousedown",e=>{const i=e.target.closest(".supi");if(!i)return;e.preventDefault();pickSup(i.dataset.n)});
 ["fCat","fSub"].forEach(i=>$(i).addEventListener("change",()=>{if(!$("supList").hidden)showSup()}));$("fSup").addEventListener("focus",showSup);$("fSup").addEventListener("input",showSup);
 $("fSup").addEventListener("blur",()=>{$("supList").hidden=true});
