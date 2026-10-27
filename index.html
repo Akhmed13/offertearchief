@@ -208,7 +208,7 @@ td.dt,td.act{white-space:nowrap}
 .cats .navlbl{margin-top:16px}
 .grp{margin:2px 0 6px 12px;padding-left:6px;border-left:1px solid rgba(255,255,255,.14)}
 .cat[data-k=prices]::after{content:none}
-.rdot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--r);margin-right:7px;flex:none}
+.rdot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--r);margin-right:7px;flex:none;vertical-align:baseline}
 .fbar{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
 .fchip{display:inline-flex;align-items:center;font:inherit;font-size:14px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:6px 14px;cursor:pointer}
 .fchip span{margin-left:8px;color:var(--mute);font-size:12px;font-weight:600}
@@ -334,7 +334,7 @@ label{display:block;font-size:13px;color:var(--mute);margin:12px 0 4px}
     <h2 style="margin:0;font:700 26px 'Barlow Condensed',sans-serif" id="dlgTitle">Offerte toevoegen</h2>
     <div class="row"><div><label>Categorie</label><select id="fCat"></select></div>
     <div><label>Subcategorie</label><select id="fSub"></select></div></div>
-    <div class="row"><div><label>Leverancier / onderaannemer</label><div class="combo"><input id="fSup" required autocomplete="off" placeholder="Kies klant of typ naam"><div class="suplist" id="supList" hidden></div></div></div>
+    <div class="row"><div><label>Leverancier / onderaannemer</label><div class="combo"><input id="fSup" required autocomplete="off" placeholder="Kies klant of typ naam"><div class="suplist" id="supList" hidden></div></div><div class="note" id="supInfo" style="margin-top:6px"></div></div>
     <div><label>Project</label><input id="fPro" list="projList" autocomplete="off"><datalist id="projList"></datalist></div></div>
     <div class="row"><div><label>Bedrag (excl. btw)</label><input id="fAmt" type="number" step="0.01" min="0"></div>
     <div><label>Datum ontvangen</label><input id="fDate" type="date"></div></div>
@@ -406,7 +406,11 @@ function loadClients(){let v=null;try{v=JSON.parse(localStorage.getItem("qa-clie
   if(v&&Array.isArray(v.list)){clientCats=Array.isArray(v.cats)?v.cats.slice():[];clients=v.list;clientSubs=v.subs&&typeof v.subs==="object"?v.subs:{};clientMeta=v.meta&&typeof v.meta==="object"?v.meta:{}}
   else{clientCats=DEFAULT_CCATS.slice();clients=[];clientSubs={};clientMeta={}}}
 function saveClients(){if(dir){saveIndex().catch(()=>{});return}try{localStorage.setItem("qa-clients",JSON.stringify({cats:clientCats,subs:clientSubs,meta:clientMeta,list:clients}))}catch(e){}}
-function clientByName(n){n=(n||"").trim().toLowerCase();return n?clients.find(c=>c.name.trim().toLowerCase()===n):null}
+const normC=x=>(x||"").toLowerCase().replace(/\b(bvba|sprl|cvba|gmbh|srl|vof|gcv|bv|nv|sa)\b/g," ").replace(/[^a-z0-9]/g,"");
+function clientByName(n){n=(n||"").trim().toLowerCase();if(!n)return null;const k=normC(n);if(!k)return null;const ex=clients.find(c=>c.name.trim().toLowerCase()===n)||clients.find(c=>normC(c.name)===k);if(ex)return ex;
+  const part=clients.filter(c=>{const a=normC(c.name),sh=a.length<=k.length?a:k,lo=a.length<=k.length?k:a;return sh.length>=5&&lo.startsWith(sh)});return part.length===1?part[0]:null}
+function supInfo(){const n=$("fSup").value.trim(),el=$("supInfo");if(!n){el.innerHTML="";return}const c=clientByName(n);
+  el.innerHTML=c?(c.rating&&RATES[c.rating]?`<i class="rdot" style="--r:${RATES[c.rating][1]}"></i>Klant <b>${esc(c.name)}</b> · beoordeling: <b>${RATES[c.rating][0].toLowerCase()}</b>`:`<i class="rdot" style="--r:var(--line)"></i>Klant <b>${esc(c.name)}</b> · nog geen beoordeling`):`<i class="rdot" style="--r:var(--line)"></i>Niet in je klantenlijst`}
 function rateDot(r){return r&&RATES[r]?`<i class="rdot" style="--r:${RATES[r][1]}" title="${RATES[r][0]}"></i>`:""}
 function saveCats(){if(dir){saveIndex().catch(()=>{});return}try{localStorage.setItem("qa-cats",JSON.stringify(cats))}catch(e){}}
 
@@ -615,7 +619,7 @@ function render(){
   quotes.forEach(x=>{if(x.amount!==""&&x.amount!=null&&(lowest[gk(x)]==null||x.amount<lowest[gk(x)]))lowest[gk(x)]=x.amount});
   const showCat=cur==="All"||!!term;const inPdf=x=>!!term&&!!x.text&&!hit([x.supplier,x.project,x.notes,x.category,x.subcategory,(x.tags||[]).join(" ")].join(" "),term);
   $("rows").innerHTML=list.map(x=>`<tr>
-   <td><strong>${rateDot((clientByName(x.supplier)||{}).rating)}${esc(x.supplier)}</strong>${(showCat||(!curSub&&x.subcategory))?`<div class="note">${esc(x.category)}${x.subcategory?" / "+esc(x.subcategory):""}</div>`:""}${x.notes?`<div class="note clip" tabindex="0">${by4(x.notes)}</div>`:""}${(x.tags||[]).length?`<div class="tags">${tagRows(x.tags,"data-tag")}</div>`:""}${inPdf(x)?'<div class="note" style="color:var(--acc);font-weight:600">Gevonden in de pdf</div>':""}</td>
+   <td><strong>${(()=>{const c=clientByName(x.supplier);return c?(rateDot(c.rating)||'<i class="rdot" style="--r:var(--line)" title="Klant zonder beoordeling"></i>'):'<i class="rdot" style="--r:var(--line)" title="Niet in je klantenlijst, of de naam komt niet overeen"></i>'})()}${esc(x.supplier)}</strong>${(showCat||(!curSub&&x.subcategory))?`<div class="note">${esc(x.category)}${x.subcategory?" / "+esc(x.subcategory):""}</div>`:""}${x.notes?`<div class="note clip" tabindex="0">${by4(x.notes)}</div>`:""}${(x.tags||[]).length?`<div class="tags">${tagRows(x.tags,"data-tag")}</div>`:""}${inPdf(x)?'<div class="note" style="color:var(--acc);font-weight:600">Gevonden in de pdf</div>':""}</td>
    <td><div class="clip" tabindex="0">${by4(x.project)||"–"}</div></td>
    <td class="amt">${money(x.amount)}${x.amount!==""&&x.amount===lowest[gk(x)]&&quotes.filter(y=>gk(y)===gk(x)&&y.amount!=="").length>1?'<span class="low">Laagste</span>':""}</td>
    <td class="dt">${esc(x.date)||"–"}</td>
@@ -628,6 +632,7 @@ function openForm(rec){
   editing=rec||null;$("form").reset();$("supList").hidden=true;$("msg").textContent="";
   $("dlgTitle").textContent=rec?"Offerte bewerken":"Offerte toevoegen";
   $("fCat").value=rec?rec.category:(cur!=="All"&&catObj(cur)?cur:cats[0].name);fileText=null;$("aiMsg").textContent="";
+  setTimeout(supInfo);
   $("projList").innerHTML=[...new Map(quotes.filter(q=>q.project&&q.project.trim()).map(q=>[normN(q.project),q.project.trim()])).values()].sort((a,b)=>a.localeCompare(b,"nl")).map(n=>`<option value="${esc(n)}">`).join("");fillSubs(rec?rec.subcategory:curSub);
   if(rec){$("fSup").value=rec.supplier;$("fPro").value=rec.project;$("fAmt").value=rec.amount;$("fDate").value=rec.date;$("fNote").value=rec.notes;$("fTags").value=(rec.tags||[]).join(", ");
     $("fileLbl").textContent="Pdf-bestand (huidig: "+(rec.fileName||"geen")+"; kies een nieuw bestand om te vervangen)"}
@@ -810,11 +815,14 @@ function parseMoney(x){let t=x.replace(/[€\s]/g,"");const lc=t.lastIndexOf(","
   if(lc>-1&&ld>-1)t=lc>ld?t.replace(/\./g,"").replace(",","."):t.replace(/,/g,"");else if(lc>-1)t=t.replace(/\./g,"").replace(",",".");
   return parseFloat(t)}
 function pickAmount(t){const MR=/\d{1,3}(?:\.\d{3})*,\d{2}|\d+,\d{2}/,all=[];
+  const ex=[/(?:totaal|subtotaal|sub-totaal|netto)\s*(?:bedrag\s*|prijs\s*)?\(?\s*(?:excl|exclusief|zonder\s*btw|voor\s*btw|ex\.?\s*btw)/gi,/\bnetto\s*(?:bedrag|prijs)\b/gi];
+  for(const re of ex){const c=[];let m;while((m=re.exec(t))){const v=MR.exec(t.slice(m.index,m.index+90));if(v){const n=parseMoney(v[0]);if(n>0)c.push(n)}}
+    if(c.length)return{v:Math.max(...c),incl:false}}
   const groups=[/totaal\s*(?:bedrag\s*)?(?:te\s*betalen\s*)?\(?\s*incl/gi,/te\s*betalen|totaal\s*bedrag|totaalbedrag|total\s*incl|totaal\s*(?:eur|€)/gi,/\btotaal\b|\btotal\b/gi];
   for(const re of groups){const c=[];let m;while((m=re.exec(t))){const v=MR.exec(t.slice(m.index,m.index+90));if(v){const n=parseMoney(v[0]);if(n>0)c.push(n)}}
-    if(c.length)return Math.max(...c)}
+    if(c.length)return{v:Math.max(...c),incl:true}}
   const g=new RegExp(MR.source,"g");let m;while((m=g.exec(t))){const n=parseMoney(m[0]);if(n>0)all.push(n)}
-  return all.length?Math.max(...all):null}
+  return all.length?{v:Math.max(...all),incl:true}:null}
 function pickDate(t){const c=[];let m;
   const r1=/\b(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})\b/g;while((m=r1.exec(t)))c.push({i:m.index,d:+m[1],mo:+m[2],y:+m[3]});
   const r2=new RegExp("\\b(\\d{1,2})\\s+("+Object.keys(MND).sort((a,b)=>b.length-a.length).join("|")+")\\.?\\s+(\\d{4})\\b","gi");
@@ -838,12 +846,12 @@ async function autoFill(){const f=$("fFile").files[0],am=$("aiMsg");fileText=nul
   if(!t){am.textContent="Geen tekst gevonden in deze pdf (waarschijnlijk een scan). Vul de gegevens zelf in.";return}
   const got=[],mark=el=>{el.classList.add("auto");el.addEventListener("input",()=>el.classList.remove("auto"),{once:true})};
   const today=new Date().toISOString().slice(0,10);
-  const sup=pickSupplier(t),amt=pickAmount(t),dt=pickDate(t),pr=pickProject(t);
-  if(sup&&!$("fSup").value.trim()){$("fSup").value=sup;mark($("fSup"));got.push("leverancier")}
-  if(amt!=null&&$("fAmt").value===""){$("fAmt").value=amt.toFixed(2);mark($("fAmt"));got.push("bedrag")}
+  let inclNote=false;const sup=pickSupplier(t),amt=pickAmount(t),dt=pickDate(t),pr=pickProject(t);
+  if(sup&&!$("fSup").value.trim()){$("fSup").value=sup;mark($("fSup"));got.push("leverancier");supInfo()}
+  if(amt&&$("fAmt").value===""){$("fAmt").value=amt.v.toFixed(2);mark($("fAmt"));got.push("bedrag");if(amt.incl)inclNote=true}
   if(dt&&(!$("fDate").value||(!editing&&$("fDate").value===today))){$("fDate").value=dt;mark($("fDate"));got.push("datum")}
   if(pr&&!$("fPro").value.trim()){$("fPro").value=pr;mark($("fPro"));got.push("project")}
-  am.textContent=got.length?"Automatisch ingevuld uit de pdf: "+got.join(", ")+". Controleer de gegevens.":"Ik kon geen gegevens uit de pdf halen. Vul ze zelf in."}
+  am.textContent=got.length?"Automatisch ingevuld uit de pdf: "+got.join(", ")+". Controleer de gegevens."+(inclNote?" Let op: het bedrag is het totaal incl. btw (er is geen bedrag excl. btw gevonden). Pas het aan naar excl. btw.":""):"Ik kon geen gegevens uit de pdf halen. Vul ze zelf in."}
 $("fFile").addEventListener("change",autoFill);
 (()=>{let n=0;const has=e=>e.dataTransfer&&[...(e.dataTransfer.types||[])].includes("Files");
   addEventListener("dragenter",e=>{if(has(e)){n++;document.body.classList.add("dropping")}});
@@ -1029,7 +1037,8 @@ function showSup(){const l=$("supList"),t=$("fSup").value.trim().toLowerCase();s
   if(!pool.list.length){if(t){l.hidden=true;return}l.innerHTML='<div class="supe">'+(pool.label?"Nog geen klanten in “"+esc(pool.label)+"”.":"Nog geen klanten.")+' Voeg ze toe via “Klanten” in de zijbalk.</div>';l.hidden=false;return}
   if(!m.length){l.hidden=true;return}
   l.innerHTML=(pool.label?`<div class="supe">Klanten uit ${esc(pool.label)}</div>`:"")+m.map(c=>`<div class="supi" data-n="${esc(c.name)}">${rateDot(c.rating)}<span class="supn">${esc(c.name)}</span><small>${esc(c.person||"")}</small></div>`).join("");l.hidden=false}
-function pickSup(n){$("fSup").value=n;$("supList").hidden=true}
+function pickSup(n){$("fSup").value=n;$("supList").hidden=true;supInfo()}
+$("fSup").addEventListener("input",supInfo);
 $("supList").addEventListener("mousedown",e=>{const i=e.target.closest(".supi");if(!i)return;e.preventDefault();pickSup(i.dataset.n)});
 ["fCat","fSub"].forEach(i=>$(i).addEventListener("change",()=>{if(!$("supList").hidden)showSup()}));$("fSup").addEventListener("focus",showSup);$("fSup").addEventListener("input",showSup);
 $("fSup").addEventListener("blur",()=>{$("supList").hidden=true});
